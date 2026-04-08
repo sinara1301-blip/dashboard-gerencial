@@ -50,10 +50,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 button,input,select,textarea{font-family:inherit;font-size:13px;}
 #app{max-width:1440px;margin:0 auto;padding:16px 16px 80px;}
 
-/* ── Header ── */
-.hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
-.hdr h1{font-size:20px;font-weight:500;}
-.hdr p{font-size:12px;color:#888;}
+/* ── Header Abaeté ── */
+.hdr{margin-bottom:0;position:relative;overflow:hidden;}
+.hdr-main{background:#0d4a2a;display:flex;align-items:stretch;justify-content:space-between;padding:0 24px;min-height:70px;position:relative;}
+.hdr-deco{position:absolute;inset:0;opacity:.06;pointer-events:none;overflow:hidden;}
+.hdr-left{display:flex;align-items:center;gap:16px;z-index:1;padding:12px 0;}
+.hdr-logo{width:54px;height:54px;flex-shrink:0;}
+.hdr-divider{width:1px;background:rgba(255,255,255,.15);margin:14px 0;}
+.hdr-brand{display:flex;flex-direction:column;justify-content:center;}
+.hdr-name{font-size:22px;font-weight:700;color:#f0eacc;letter-spacing:3px;line-height:1;font-family:Georgia,serif;}
+.hdr-sub{font-size:9px;color:#a0c090;letter-spacing:3px;margin-top:3px;font-weight:500;}
+.hdr-titlewrap{display:flex;flex-direction:column;justify-content:center;padding-left:4px;}
+.hdr-title{font-size:13px;font-weight:500;color:#c8ddb8;letter-spacing:.3px;}
+.hdr-titlesub{font-size:10px;color:#6a9060;margin-top:2px;}
+.hdr-right{display:flex;align-items:center;gap:8px;z-index:1;}
+.hdr-btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:none;}
+.hdr-btn-ghost{background:rgba(255,255,255,.08);color:#c8ddb8;border:0.5px solid rgba(255,255,255,.18);}
+.hdr-btn-ghost:hover{background:rgba(255,255,255,.14);}
+.hdr-btn-prim{background:#c8a040;color:#0d2a10;font-weight:700;}
+.hdr-btn-prim:hover{background:#dab050;}
+.hdr-tagline{background:#0a3820;padding:7px 24px;display:flex;align-items:center;gap:8px;border-bottom:2px solid #1a6a3a;margin-bottom:16px;}
+.hdr-titem{font-size:10px;color:#7aaa6a;display:flex;align-items:center;gap:5px;letter-spacing:.3px;}
+.hdr-tdot{width:4px;height:4px;border-radius:50%;background:#4a9a3a;flex-shrink:0;}
+.hdr-tsep{width:1px;height:10px;background:#1e5030;margin:0 4px;}
 
 /* ── Status de conexão ── */
 #status-bar{font-size:12px;padding:6px 12px;border-radius:6px;margin-bottom:12px;display:none;}
@@ -161,16 +180,82 @@ hr.sep{border:none;border-top:0.5px solid #e5e5e0;margin:14px 0;}
 </head>
 <body>
 <div id="app">
-  <div class="hdr">
-    <div><h1>Pipeline de Projetos</h1><p>Construtora &amp; Incorporadora</p></div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-      <span id="sync-indicator" style="font-size:11px;color:#888;"></span>
-      <span id="exp-msg" style="font-size:12px;color:#639922;font-weight:500;display:none;">CSV exportado!</span>
-      <button class="btn" onclick="exportCSV()">Exportar CSV</button>
-      <button class="btn" onclick="abrirConfig()">Configurações</button>
-      <button class="btn btn-primary" onclick="abrirNovo()">+ Novo projeto</button>
+<div class="hdr">
+  <div class="hdr-main">
+    <!-- Padrão geométrico decorativo fundo -->
+    <svg class="hdr-deco" viewBox="0 0 900 70" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <g stroke="white" stroke-width="0.8" fill="none">
+        <polygon points="60,5 90,35 60,65 30,35"/>
+        <polygon points="60,12 83,35 60,58 37,35"/>
+        <line x1="30" y1="35" x2="90" y2="35"/><line x1="60" y1="5" x2="60" y2="65"/>
+        <polygon points="160,5 190,35 160,65 130,35"/>
+        <polygon points="160,12 183,35 160,58 137,35"/>
+        <line x1="130" y1="35" x2="190" y2="35"/><line x1="160" y1="5" x2="160" y2="65"/>
+        <polygon points="260,5 290,35 260,65 230,35"/>
+        <line x1="230" y1="35" x2="290" y2="35"/><line x1="260" y1="5" x2="260" y2="65"/>
+        <polygon points="700,5 730,35 700,65 670,35"/>
+        <polygon points="700,12 723,35 700,58 677,35"/>
+        <line x1="670" y1="35" x2="730" y2="35"/><line x1="700" y1="5" x2="700" y2="65"/>
+        <polygon points="800,5 830,35 800,65 770,35"/>
+        <line x1="770" y1="35" x2="830" y2="35"/><line x1="800" y1="5" x2="800" y2="65"/>
+        <polygon points="860,5 890,35 860,65 830,35"/>
+        <line x1="830" y1="35" x2="890" y2="35"/><line x1="860" y1="5" x2="860" y2="65"/>
+      </g>
+    </svg>
+
+    <div class="hdr-left">
+      <!-- Logo SVG fiel ao original: símbolo geométrico indígena -->
+      <svg class="hdr-logo" viewBox="0 0 54 54" xmlns="http://www.w3.org/2000/svg">
+        <rect width="54" height="54" rx="6" fill="#0a3820"/>
+        <!-- Chevron superior (cobre/dourado) -->
+        <polyline points="10,28 27,10 44,28" fill="none" stroke="#c8903a" stroke-width="1.2"/>
+        <polyline points="12,30 27,13 42,30" fill="none" stroke="#c8903a" stroke-width="1.2"/>
+        <polyline points="14,32 27,16 40,32" fill="none" stroke="#c8a050" stroke-width="1"/>
+        <!-- Losango central (creme) -->
+        <polygon points="27,18 36,27 27,36 18,27" fill="none" stroke="#f0eacc" stroke-width="1.1"/>
+        <polygon points="27,21 33,27 27,33 21,27" fill="none" stroke="#f0eacc" stroke-width="1"/>
+        <!-- Linhas cruzadas (X) -->
+        <line x1="12" y1="20" x2="42" y2="34" stroke="#f0eacc" stroke-width=".9"/>
+        <line x1="42" y1="20" x2="12" y2="34" stroke="#f0eacc" stroke-width=".9"/>
+        <line x1="13" y1="22" x2="41" y2="32" stroke="#f0eacc" stroke-width=".7" opacity=".6"/>
+        <line x1="41" y1="22" x2="13" y2="32" stroke="#f0eacc" stroke-width=".7" opacity=".6"/>
+        <!-- Ponto central cobre -->
+        <circle cx="27" cy="27" r="1.5" fill="#c8903a"/>
+        <!-- Chevron inferior (creme) -->
+        <polyline points="18,33 27,42 36,33" fill="none" stroke="#f0eacc" stroke-width="1.1"/>
+        <polyline points="20,33 27,39 34,33" fill="none" stroke="#f0eacc" stroke-width="1" opacity=".7"/>
+      </svg>
+
+      <div class="hdr-brand">
+        <div class="hdr-name">ABAETÉ</div>
+        <div class="hdr-sub">Construtora &amp; Incorporadora</div>
+      </div>
+
+      <div class="hdr-divider"></div>
+
+      <div class="hdr-titlewrap">
+        <div class="hdr-title">Dashboard Gerencial</div>
+        <div class="hdr-titlesub">Pipeline de projetos · Tempo real</div>
+      </div>
+    </div>
+
+    <div class="hdr-right">
+      <span id="sync-indicator" style="font-size:11px;color:#7aaa6a;"></span>
+      <span id="exp-msg" style="font-size:12px;color:#8fbb5a;font-weight:500;display:none;">CSV exportado!</span>
+      <button class="hdr-btn hdr-btn-ghost" onclick="exportCSV()">Exportar CSV</button>
+      <button class="hdr-btn hdr-btn-ghost" onclick="abrirConfig()">Configurações</button>
+      <button class="hdr-btn hdr-btn-prim" onclick="abrirNovo()">+ Novo projeto</button>
     </div>
   </div>
+
+  <div class="hdr-tagline">
+    <div class="hdr-titem"><div class="hdr-tdot"></div>Construindo com propósito</div>
+    <div class="hdr-tsep"></div>
+    <div class="hdr-titem"><div class="hdr-tdot"></div>Incorporação responsável</div>
+    <div class="hdr-tsep"></div>
+    <div class="hdr-titem"><div class="hdr-tdot"></div>Resultados que ficam</div>
+  </div>
+</div>
   <div id="status-bar"></div>
   <div class="metrics" id="metrics"></div>
   <div id="crono-global"></div>
