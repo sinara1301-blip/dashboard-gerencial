@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Pipeline – Construtora</title>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     CONFIGURAÇÕES FIREBASE
+     Substitua os valores abaixo pelos da sua conta Firebase
+     (Configurações do projeto → Seus aplicativos → firebaseConfig)
+════════════════════════════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, onValue, remove, update }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey:            "COLE_SUA_API_KEY_AQUI",
+  authDomain:        "COLE_SEU_AUTH_DOMAIN_AQUI",
+  databaseURL:       "COLE_SUA_DATABASE_URL_AQUI",
+  projectId:         "COLE_SEU_PROJECT_ID_AQUI",
+  storageBucket:     "COLE_SEU_STORAGE_BUCKET_AQUI",
+  messagingSenderId: "COLE_SEU_MESSAGING_SENDER_ID_AQUI",
+  appId:             "COLE_SEU_APP_ID_AQUI"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+// ── Expõe funções de DB para o restante do código ──────────────────
+window._dbSet    = (path, val) => set(ref(db, path), val);
+window._dbUpdate = (path, val) => update(ref(db, path), val);
+window._dbRemove = (path)      => remove(ref(db, path));
+window._dbListen = (path, cb)  => onValue(ref(db, path), snap => cb(snap.val()));
+
+// ── Inicia quando Firebase estiver pronto ─────────────────────────
+window.addEventListener('load', () => {
+  if(typeof window.initApp === 'function') window.initApp();
+});
+</script>
+
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   ESTILOS GLOBAIS
+   Para alterar cores, fontes ou espaçamentos, edite aqui
+════════════════════════════════════════════════════════════════ */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f4f2;color:#1a1a18;font-size:14px;}
+button,input,select,textarea{font-family:inherit;font-size:13px;}
+#app{max-width:1440px;margin:0 auto;padding:16px 16px 80px;}
+
+/* ── Header ── */
+.hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.hdr h1{font-size:20px;font-weight:500;}
+.hdr p{font-size:12px;color:#888;}
+
+/* ── Status de conexão ── */
+#status-bar{font-size:12px;padding:6px 12px;border-radius:6px;margin-bottom:12px;display:none;}
+#status-bar.online{background:#EAF3DE;color:#27500A;}
+#status-bar.offline{background:#FCEBEB;color:#A32D2D;}
+#status-bar.loading{background:#FAEEDA;color:#633806;}
+
+/* ── Métricas ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:14px;}
+.metric{background:#e9e9e7;border-radius:8px;padding:10px 12px;}
+.metric .ml{font-size:11px;color:#777;margin-bottom:4px;}
+.metric .mv{font-size:19px;font-weight:500;}
+
+/* ── Cronograma global ── */
+#crono-global{background:#fff;border:0.5px solid #ddd;border-radius:10px;padding:14px 16px;margin-bottom:14px;}
+#crono-global h2{font-size:13px;font-weight:600;color:#888;letter-spacing:.4px;margin-bottom:12px;}
+#crono-chart-wrap{overflow-x:auto;margin-bottom:12px;}
+#crono-chart{display:flex;align-items:flex-end;gap:6px;height:100px;padding-bottom:20px;min-width:400px;}
+.bar-col{display:flex;flex-direction:column;align-items:center;flex:1;min-width:36px;}
+.bar-col .bar{width:100%;border-radius:4px 4px 0 0;min-height:2px;position:relative;}
+.bar-col .blabel{font-size:9px;color:#888;margin-top:4px;white-space:nowrap;}
+.bar-col .bval{font-size:9px;color:#185FA5;font-weight:600;margin-bottom:2px;white-space:nowrap;}
+#crono-table{width:100%;border-collapse:collapse;font-size:12px;}
+#crono-table th{padding:5px 10px;text-align:left;font-size:11px;color:#888;border-bottom:0.5px solid #e5e5e0;white-space:nowrap;}
+#crono-table td{padding:5px 10px;border-bottom:0.5px solid #f0f0ee;}
+
+/* ── Funil ── */
+.funnel-wrap{background:#fff;border:0.5px solid #ddd;border-radius:10px;padding:12px 14px;margin-bottom:10px;overflow-x:auto;}
+.funnel-wrap .ftitle{font-size:11px;color:#888;font-weight:600;letter-spacing:.4px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.funnels{display:flex;gap:6px;min-width:300px;}
+.fcell{flex:1;text-align:center;cursor:pointer;}
+.fcell-inner{border-radius:8px;padding:8px 4px;border:2px solid transparent;transition:all .15s;}
+.fcell-inner .fn{font-size:17px;font-weight:500;}
+.fcell-inner .fl{font-size:9px;font-weight:600;line-height:1.3;margin-top:2px;}
+.fcell-inner .fv{font-size:9px;opacity:.8;margin-top:1px;}
+
+/* ── Filtros ── */
+.filters{background:#fff;border:0.5px solid #ddd;border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.filters input,.filters select{padding:6px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;}
+.viewbtns{display:flex;gap:4px;margin-left:auto;}
+
+/* ── Kanban ── */
+#kanban-area{display:flex;gap:10px;overflow-x:auto;padding-bottom:10px;align-items:flex-start;}
+.kcol{min-width:200px;flex:0 0 200px;}
+.kcol-hdr{padding:6px 10px;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600;}
+.kcol-body{border-radius:0 0 8px 8px;min-height:50px;padding:6px;display:flex;flex-direction:column;gap:6px;}
+.kcard{background:#fff;border:0.5px solid #e5e5e0;border-radius:8px;padding:10px;cursor:pointer;}
+.kcard:hover{border-color:#bbb;}
+.kcard .kc-name{font-size:13px;font-weight:500;display:flex;justify-content:space-between;gap:4px;}
+.kcard .kc-emp{font-size:11px;color:#888;margin-top:2px;}
+.kcard .kc-vgv{font-size:12px;font-weight:500;color:#185FA5;margin-top:4px;}
+.kcard .kc-foot{display:flex;justify-content:space-between;margin-top:4px;flex-wrap:wrap;gap:2px;}
+
+/* ── Lista ── */
+#lista-area{background:#fff;border:0.5px solid #ddd;border-radius:8px;overflow-x:auto;}
+#lista-area table{width:100%;border-collapse:collapse;min-width:700px;}
+#lista-area th{padding:8px 10px;text-align:left;font-size:11px;font-weight:600;color:#888;border-bottom:0.5px solid #e5e5e0;background:#fafaf9;white-space:nowrap;}
+#lista-area td{padding:8px 10px;border-bottom:0.5px solid #f0f0ee;cursor:pointer;}
+#lista-area tr:hover td{background:#f8f8f6;}
+
+/* ── Painel lateral ── */
+#painel{position:fixed;top:0;right:0;bottom:0;width:460px;max-width:100vw;background:#fff;border-left:0.5px solid #ddd;z-index:100;overflow-y:auto;padding:16px;display:none;}
+#painel.open{display:block;}
+.panel-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px;}
+.panel-hdr h2{font-size:16px;font-weight:500;}
+.ptabs{display:flex;border-bottom:0.5px solid #e5e5e0;margin-bottom:12px;flex-wrap:wrap;}
+.ptab{padding:7px 11px;background:none;border:none;cursor:pointer;font-size:12px;color:#888;border-bottom:2px solid transparent;white-space:nowrap;}
+.ptab.on{color:#185FA5;font-weight:600;border-bottom-color:#185FA5;}
+.pinfo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.pinfo-cell{background:#f4f4f2;border-radius:6px;padding:8px 10px;}
+.pinfo-cell .pl{font-size:10px;color:#888;margin-bottom:2px;}
+.pinfo-cell .pv{font-size:13px;font-weight:500;}
+.obs-card{background:#f4f4f2;border-radius:6px;padding:8px 10px;margin-bottom:6px;}
+.obs-card .ots{font-size:10px;color:#aaa;margin-bottom:2px;}
+.doc-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid #f0f0ee;}
+.crono-row{display:grid;grid-template-columns:1fr 1fr auto auto;gap:6px;align-items:center;padding:5px 0;border-bottom:0.5px solid #f0f0ee;font-size:13px;}
+
+/* ── Modal ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal-box{background:#fff;border-radius:12px;border:0.5px solid #ddd;padding:20px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;}
+.modal-box h3{font-size:16px;font-weight:500;margin-bottom:14px;}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fgrid .full{grid-column:1/-1;}
+.fg label{font-size:11px;color:#888;font-weight:600;letter-spacing:.3px;display:block;margin-bottom:3px;}
+.fg input,.fg select,.fg textarea{width:100%;padding:7px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;}
+.fg textarea{resize:vertical;}
+
+/* ── Utilitários ── */
+.tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.cat-tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;}
+.btn{padding:6px 13px;border-radius:6px;border:0.5px solid #ccc;background:#f4f4f2;color:#444;cursor:pointer;font-size:13px;}
+.btn:hover{background:#eee;}
+.btn-primary{background:#dcfce7;color:#15803d;border-color:#86efac;font-weight:500;}
+.btn-blue{background:#dbeafe;color:#1e40af;border-color:#93c5fd;}
+.btn-danger{background:#FCEBEB;color:#E24B4A;border-color:#fca5a5;}
+.btn-row{display:flex;gap:8px;margin-top:14px;}
+.btn-row .btn{flex:1;}
+.venc{color:#E24B4A;font-weight:500;}
+.urg{color:#BA7517;font-weight:500;}
+.hidden{display:none!important;}
+.empty{text-align:center;padding:20px;color:#bbb;font-size:13px;}
+hr.sep{border:none;border-top:0.5px solid #e5e5e0;margin:14px 0;}
+.slbl{font-size:11px;color:#888;font-weight:600;letter-spacing:.3px;margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hdr">
+    <div><h1>Pipeline de Projetos</h1><p>Construtora &amp; Incorporadora</p></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+      <span id="sync-indicator" style="font-size:11px;color:#888;"></span>
+      <span id="exp-msg" style="font-size:12px;color:#639922;font-weight:500;display:none;">CSV exportado!</span>
+      <button class="btn" onclick="exportCSV()">Exportar CSV</button>
+      <button class="btn" onclick="abrirConfig()">Configurações</button>
+      <button class="btn btn-primary" onclick="abrirNovo()">+ Novo projeto</button>
+    </div>
+  </div>
+  <div id="status-bar"></div>
+  <div class="metrics" id="metrics"></div>
+  <div id="crono-global"></div>
+  <div id="funnels"></div>
+  <div class="filters">
+    <input id="busca" placeholder="Buscar cliente ou empreendimento..." oninput="render()" style="min-width:180px;flex:1 1 180px;">
+    <select id="fcat" onchange="setFiltroFase('Todas');render()">
+      <option value="todas">Todas as categorias</option>
+      <option value="comercial">Comercial</option>
+      <option value="obra">Obra</option>
+    </select>
+    <select id="fresp" onchange="render()"><option value="Todos">Todos responsáveis</option></select>
+    <select id="fprio" onchange="render()">
+      <option value="Todas">Todas prioridades</option>
+      <option>Alta</option><option>Média</option><option>Baixa</option>
+    </select>
+    <div class="viewbtns">
+      <button class="btn" id="btn-kanban" onclick="setView('kanban')">Kanban</button>
+      <button class="btn" id="btn-lista"  onclick="setView('lista')">Lista</button>
+    </div>
+  </div>
+  <div id="kanban-area"></div>
+  <div id="lista-area" class="hidden"></div>
+</div>
+
+<div id="painel">
+  <div class="panel-hdr">
+    <div style="flex:1;min-width:0;"><h2 id="p-nome"></h2><div style="font-size:12px;color:#888" id="p-emp"></div></div>
+    <div style="display:flex;gap:4px;flex-shrink:0;">
+      <button class="btn btn-blue" onclick="abrirEditar()">Editar</button>
+      <button class="btn btn-danger" onclick="confirmarExcluir()">Excluir</button>
+      <button class="btn" onclick="fecharPainel()" style="font-size:18px;padding:2px 10px;line-height:1;">×</button>
+    </div>
+  </div>
+  <div class="ptabs">
+    <button class="ptab on" onclick="setTab('info',this)">Informações</button>
+    <button class="ptab"    onclick="setTab('contrato',this)">Contrato</button>
+    <button class="ptab"    onclick="setTab('crono',this)">Recebimentos</button>
+    <button class="ptab"    onclick="setTab('docs',this)">Documentos</button>
+    <button class="ptab"    onclick="setTab('obs',this)">Histórico</button>
+  </div>
+  <div id="tab-info"></div>
+  <div id="tab-contrato" class="hidden"></div>
+  <div id="tab-crono"    class="hidden"></div>
+  <div id="tab-docs"     class="hidden"></div>
+  <div id="tab-obs"      class="hidden"></div>
+</div>
+
+<div class="modal-bg hidden" id="modal-bg">
+  <div class="modal-box" id="modal-box"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// CONFIG DEFAULT
+// Edite aqui os valores padrão do sistema
+// ═══════════════════════════════════════════════════════════════════
+const TIPOS_CONTRATO = [
+  'Incorporação','Loteamento','Empreitada global',
+  'Por administração e cessão de mão de obra',
+  'Administração e empreitada de mão de obra','Outro'
+];
+const FORMAS_PGTO = [
+  'À vista','Parcelado (boleto)','Financiamento bancário','Permuta','Misto','A definir'
+];
+const CFG_DEFAULT = {
+  fasesComerciais: ['Captação','Negociação','Ajustes','Fechamento','Contrato Assinado'],
+  fasesObra:       ['Projeto / Licenciamento','Orçamento','Licitação','Em Obra','Vistoria / Entrega','Concluído'],
+  responsaveis:    [
+    {nome:'Ana Lima',cargo:'Corretor'},{nome:'Carlos Mota',cargo:'Corretor'},
+    {nome:'Fernanda Rocha',cargo:'Engenheiro'},{nome:'Ricardo Souza',cargo:'Orçamentista'},
+    {nome:'Beatriz Nunes',cargo:'Diretor Comercial'},
+  ],
+  cargos:  ['Diretor Comercial','Corretor','Engenheiro','Arquiteto','Orçamentista','Gerente de Obra','Responsável Técnico'],
+  tipos:   ['Residencial Vertical','Residencial Horizontal','Comercial','Misto','Industrial','Outro'],
+  origens: ['Indicação','Prospecção ativa','Site / Digital','Parceiro','Evento / Feira','Licitação pública','Outro'],
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// PALETA DE CORES DAS FASES
+// Adicione mais objetos {bg,text,border} para suportar mais fases
+// ═══════════════════════════════════════════════════════════════════
+const PALETAS = [
+  {bg:'#E6F1FB',text:'#0C447C',border:'#378ADD'},
+  {bg:'#FAEEDA',text:'#633806',border:'#BA7517'},
+  {bg:'#FBEAF0',text:'#72243E',border:'#D4537E'},
+  {bg:'#EEEDFE',text:'#3C3489',border:'#7F77DD'},
+  {bg:'#EAF3DE',text:'#27500A',border:'#639922'},
+  {bg:'#E1F5EE',text:'#085041',border:'#1D9E75'},
+  {bg:'#FAECE7',text:'#993C1D',border:'#D85A30'},
+  {bg:'#F1EFE8',text:'#5F5E5A',border:'#888780'},
+  {bg:'#FCF0F0',text:'#A32D2D',border:'#E24B4A'},
+  {bg:'#EEF9E8',text:'#3B6D11',border:'#97C459'},
+];
+const PC = {Alta:'#E24B4A',Média:'#BA7517',Baixa:'#639922'};
+
+// ═══════════════════════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ═══════════════════════════════════════════════════════════════════
+let projetos   = [];
+let config     = JSON.parse(JSON.stringify(CFG_DEFAULT));
+let selectedId = null;
+let filtroFase = 'Todas';
+let filtroFaseCat = 'todas';
+let currentView  = 'kanban';
+let currentTab   = 'info';
+let dbReady      = false;
+
+// ═══════════════════════════════════════════════════════════════════
+// FUNÇÕES DE DADOS (Firebase)
+// ═══════════════════════════════════════════════════════════════════
+function setStatus(tipo, msg) {
+  const bar = document.getElementById('status-bar');
+  const ind = document.getElementById('sync-indicator');
+  bar.className = tipo; bar.textContent = msg;
+  bar.style.display = msg ? 'block' : 'none';
+  ind.textContent = tipo === 'loading' ? '⟳ Sincronizando...' : tipo === 'online' ? '● Online' : '';
+  ind.style.color = tipo === 'online' ? '#639922' : '#BA7517';
+}
+
+function salvarProjeto(p) {
+  if (!dbReady) return;
+  setStatus('loading', 'Salvando...');
+  window._dbSet(`projetos/${p.id}`, p)
+    .then(() => setStatus('online', ''))
+    .catch(() => setStatus('offline', 'Erro ao salvar. Verifique a conexão.'));
+}
+function removerProjetoDB(id) {
+  if (!dbReady) return;
+  window._dbRemove(`projetos/${id}`)
+    .then(() => setStatus('online', ''))
+    .catch(() => setStatus('offline', 'Erro ao remover.'));
+}
+function salvarConfig(cfg) {
+  if (!dbReady) return;
+  window._dbSet('config', cfg)
+    .catch(() => setStatus('offline', 'Erro ao salvar configurações.'));
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// INICIALIZAÇÃO — aguarda Firebase estar pronto
+// ═══════════════════════════════════════════════════════════════════
+window.initApp = function() {
+  setStatus('loading', 'Conectando ao banco de dados...');
+
+  // Escuta projetos em tempo real
+  window._dbListen('projetos', data => {
+    projetos = data ? Object.values(data) : [];
+    render();
+    if (selectedId) renderPainel();
+  });
+
+  // Escuta configurações em tempo real
+  window._dbListen('config', data => {
+    if (data) {
+      config = data;
+    } else {
+      // Primeira vez: salva config padrão
+      salvarConfig(CFG_DEFAULT);
+    }
+    dbReady = true;
+    setStatus('online', '');
+    render();
+  });
+};
+
+// Fallback: se Firebase não carregar, usa dados locais
+setTimeout(() => {
+  if (!dbReady) {
+    setStatus('offline', '⚠️ Firebase não conectado. Configure as credenciais no topo do arquivo HTML. Os dados serão salvos localmente.');
+    dbReady = false;
+    try { const s=localStorage.getItem('pipeline_local'); if(s){const d=JSON.parse(s);projetos=d.projetos||[];config=d.config||CFG_DEFAULT;} } catch{}
+    render();
+  }
+}, 4000);
+
+// ═══════════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════════
+function todasFases(){ return [...config.fasesComerciais,...config.fasesObra]; }
+function corFase(f){ const all=todasFases(); return PALETAS[all.indexOf(f)%PALETAS.length]||PALETAS[0]; }
+function fmt(v){ return 'R$ '+(Number(v)/1e6).toFixed(2).replace('.',',')+'M'; }
+function fmtK(v){ return Number(v)>=1000000?fmt(v):'R$ '+Number(v).toLocaleString('pt-BR'); }
+function fmtMil(v){ return 'R$ '+Number(v).toLocaleString('pt-BR'); }
+function fmtD(d){ return d?new Date(d+'T00:00:00').toLocaleDateString('pt-BR'):'—'; }
+const today=new Date(); today.setHours(0,0,0,0);
+function diffD(d){ return d?Math.round((new Date(d+'T00:00:00')-today)/864e5):null; }
+function isVenc(d){ const x=diffD(d); return x!==null&&x<0; }
+function isUrg(d){ const x=diffD(d); return x!==null&&x>=0&&x<=14; }
+function nowStr(){ return new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function tagHTML(f){ const c=corFase(f); return `<span class="tag" style="background:${c.bg};color:${c.text};border:0.5px solid ${c.border};">${esc(f)}</span>`; }
+function catTag(cat){ return cat==='obra'?`<span class="cat-tag" style="background:#E1F5EE;color:#085041;">Obra</span>`:`<span class="cat-tag" style="background:#E6F1FB;color:#0C447C;">Comercial</span>`; }
+
+function getFiltered(){
+  const busca=document.getElementById('busca')?.value.toLowerCase()||'';
+  const fcat=document.getElementById('fcat')?.value||'todas';
+  const fresp=document.getElementById('fresp')?.value||'Todos';
+  const fprio=document.getElementById('fprio')?.value||'Todas';
+  return projetos.filter(p=>{
+    if(fcat!=='todas'&&p.categoria!==fcat) return false;
+    if(filtroFase!=='Todas'&&p.fase!==filtroFase) return false;
+    if(fresp!=='Todos'&&p.responsavel!==fresp) return false;
+    if(fprio!=='Todas'&&p.prioridade!==fprio) return false;
+    if(busca&&!p.cliente.toLowerCase().includes(busca)&&!(p.empreendimento||'').toLowerCase().includes(busca)) return false;
+    return true;
+  });
+}
+function setFiltroFase(f,cat){
+  filtroFase=f; filtroFaseCat=cat||'todas';
+  if(cat) document.getElementById('fcat').value=(f==='Todas'?'todas':cat);
+  render();
+}
+function setView(v){
+  currentView=v;
+  document.getElementById('kanban-area').classList.toggle('hidden',v!=='kanban');
+  document.getElementById('lista-area').classList.toggle('hidden',v!=='lista');
+  document.getElementById('btn-kanban').classList.toggle('btn-blue',v==='kanban');
+  document.getElementById('btn-lista').classList.toggle('btn-blue',v==='lista');
+  render();
+}
+function setTab(t,el){
+  currentTab=t;
+  document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on'));
+  if(el) el.classList.add('on');
+  ['info','contrato','crono','docs','obs'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('hidden',x!==t));
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// RENDER PRINCIPAL
+// ═══════════════════════════════════════════════════════════════════
+function render(){
+  renderMetrics();
+  buildCronoGlobal();
+  renderFunnels();
+  renderResponsaveisSelect();
+  if(currentView==='kanban') renderKanban(); else renderLista();
+}
+
+// ── Métricas ──────────────────────────────────────────────────────
+function renderMetrics(){
+  const vgvTotal=projetos.reduce((a,p)=>a+Number(p.vgv),0);
+  const criticos=projetos.filter(p=>isVenc(p.prazoFechamento)||isUrg(p.prazoFechamento)).length;
+  const emObra=projetos.filter(p=>p.categoria==='obra').length;
+  const mes=new Date(),yy=mes.getFullYear(),mm=mes.getMonth()+1;
+  const recMes=projetos.reduce((a,p)=>a+(p.cronograma||[]).filter(c=>{
+    if(!c.data||c.recebido) return false;
+    const d=new Date(c.data+'T00:00:00');
+    return d.getFullYear()===yy&&d.getMonth()+1===mm;
+  }).reduce((s,c)=>s+Number(c.valor||0),0),0);
+  document.getElementById('metrics').innerHTML=[
+    {l:'VGV total pipeline',v:fmt(vgvTotal),c:'#185FA5'},
+    {l:'Projetos ativos',v:projetos.length,c:'#1a1a18'},
+    {l:'Prazos críticos',v:criticos,c:'#E24B4A'},
+    {l:'Em obra / execução',v:emObra,c:'#3B6D11'},
+    {l:'A receber este mês',v:fmtK(recMes),c:recMes>0?'#BA7517':'#aaa'},
+  ].map(m=>`<div class="metric"><div class="ml">${esc(m.l)}</div><div class="mv" style="color:${m.c}">${m.v}</div></div>`).join('');
+}
+
+// ── Cronograma global ─────────────────────────────────────────────
+function buildCronoGlobal(){
+  const map={};
+  projetos.forEach(p=>(p.cronograma||[]).forEach(c=>{
+    if(!c.data||!c.valor) return;
+    const d=new Date(c.data+'T00:00:00');
+    const key=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0');
+    const lbl=d.toLocaleString('pt-BR',{month:'short'}).replace('.','')+'/'+(d.getFullYear()+'').slice(-2);
+    if(!map[key]) map[key]={lbl,total:0,recebido:0,pendente:0,n:0};
+    const v=Number(c.valor)||0;
+    map[key].total+=v; map[key].n++;
+    if(c.recebido) map[key].recebido+=v; else map[key].pendente+=v;
+  }));
+  const keys=Object.keys(map).sort();
+  if(!keys.length){
+    document.getElementById('crono-global').innerHTML=`<h2>CRONOGRAMA DE RECEBIMENTOS</h2><p style="font-size:13px;color:#aaa;">Nenhum recebimento lançado ainda.</p>`;
+    return;
+  }
+  const maxVal=Math.max(...keys.map(k=>map[k].total),1);
+  const hoje=new Date(), yy=hoje.getFullYear(), mm=hoje.getMonth()+1;
+  let bars='';
+  keys.forEach(k=>{
+    const m=map[k]; const [y,mo]=k.split('-');
+    const isMes=yy===Number(y)&&mm===Number(mo);
+    const h=Math.round((m.total/maxVal)*80)+2;
+    const rh=Math.round((m.recebido/maxVal)*80);
+    bars+=`<div class="bar-col" title="${m.lbl}: ${fmtMil(m.total)}">
+      <div class="bval">${fmtK(m.total)}</div>
+      <div class="bar" style="height:${h}px;background:${isMes?'#1D9E75':'#378ADD'};">
+        ${rh>0?`<div style="position:absolute;bottom:0;left:0;right:0;height:${rh}px;background:${isMes?'#085041':'#0C447C'};border-radius:4px 4px 0 0;"></div>`:''}
+      </div>
+      <div class="blabel">${m.lbl}</div>
+    </div>`;
+  });
+  const tTotal=keys.reduce((a,k)=>a+map[k].total,0);
+  const tRec=keys.reduce((a,k)=>a+map[k].recebido,0);
+  let trows=keys.map(k=>`<tr><td>${map[k].lbl}</td><td style="font-weight:500;color:#185FA5">${fmtMil(map[k].total)}</td><td style="color:#639922">${fmtMil(map[k].recebido)}</td><td style="color:#E24B4A">${fmtMil(map[k].pendente)}</td><td style="color:#888;font-size:11px;">${map[k].n} parcela(s)</td></tr>`).join('');
+  trows+=`<tr style="background:#f4f4f2;font-weight:600;"><td>Total</td><td style="color:#185FA5">${fmtMil(tTotal)}</td><td style="color:#639922">${fmtMil(tRec)}</td><td style="color:#E24B4A">${fmtMil(tTotal-tRec)}</td><td></td></tr>`;
+  document.getElementById('crono-global').innerHTML=`
+    <h2>CRONOGRAMA DE RECEBIMENTOS <span style="font-size:11px;font-weight:400;color:#aaa;margin-left:6px;">azul escuro=recebido | azul claro=pendente | verde=mês atual</span></h2>
+    <div id="crono-chart-wrap"><div id="crono-chart">${bars}</div></div>
+    <div style="overflow-x:auto"><table id="crono-table">
+      <thead><tr><th>Mês</th><th>Total</th><th>Recebido</th><th>Pendente</th><th>Parcelas</th></tr></thead>
+      <tbody>${trows}</tbody>
+    </table></div>`;
+}
+
+// ── Funis ─────────────────────────────────────────────────────────
+function renderFunnels(){
+  const fcat=document.getElementById('fcat')?.value||'todas';
+  let html='';
+  [['comercial','Funil Comercial',config.fasesComerciais],['obra','Funil de Obra',config.fasesObra]].forEach(([cat,label,fases])=>{
+    if(fcat!=='todas'&&fcat!==cat) return;
+    const limpar=filtroFase!=='Todas'&&filtroFaseCat===cat?`<button class="btn" onclick="setFiltroFase('Todas')" style="font-size:11px;padding:3px 10px;">Limpar ×</button>`:'';
+    html+=`<div class="funnel-wrap"><div class="ftitle"><span>${esc(label)}</span>${limpar}</div><div class="funnels">`;
+    fases.forEach(f=>{
+      const c=corFase(f),cnt=projetos.filter(p=>p.fase===f).length,vgv=projetos.filter(p=>p.fase===f).reduce((a,p)=>a+Number(p.vgv),0);
+      const ativo=filtroFase===f,opac=filtroFase!=='Todas'&&!ativo?'.35':'1';
+      html+=`<div class="fcell" onclick="setFiltroFase('${f}','${cat}')"><div class="fcell-inner" style="background:${ativo?c.text:c.bg};border-color:${c.border};opacity:${opac}">
+        <div class="fn" style="color:${ativo?'#fff':c.text}">${cnt}</div>
+        <div class="fl" style="color:${ativo?'#fff':c.text}">${esc(f)}</div>
+        <div class="fv" style="color:${ativo?'rgba(255,255,255,.8)':c.text}">${fmt(vgv)}</div>
+      </div></div>`;
+    });
+    html+='</div></div>';
+  });
+  document.getElementById('funnels').innerHTML=html;
+}
+
+function renderResponsaveisSelect(){
+  const sel=document.getElementById('fresp'); if(!sel) return;
+  const cur=sel.value;
+  sel.innerHTML=`<option value="Todos">Todos responsáveis</option>`+
+    (config.responsaveis||[]).map(r=>`<option${cur===r.nome?' selected':''}>${esc(r.nome)}</option>`).join('');
+}
+
+// ── Kanban ────────────────────────────────────────────────────────
+function renderKanban(){
+  const fcat=document.getElementById('fcat')?.value||'todas';
+  const filtered=getFiltered();
+  let fases=todasFases();
+  if(fcat==='comercial') fases=config.fasesComerciais;
+  else if(fcat==='obra') fases=config.fasesObra;
+  if(filtroFase!=='Todas') fases=fases.filter(f=>f===filtroFase);
+  let html='';
+  fases.forEach(f=>{
+    const c=corFase(f),cards=filtered.filter(p=>p.fase===f);
+    html+=`<div class="kcol"><div class="kcol-hdr" style="background:${c.bg};border:0.5px solid ${c.border};border-bottom:none;color:${c.text}"><span>${esc(f)}</span><span>${cards.length}</span></div>
+      <div class="kcol-body" style="border:0.5px solid ${c.border};border-top:none;">`;
+    if(!cards.length) html+=`<div class="empty" style="padding:10px 0;font-size:11px;">—</div>`;
+    cards.forEach(p=>{
+      const prazoC=isVenc(p.prazoFechamento)?'venc':isUrg(p.prazoFechamento)?'urg':'';
+      const prazoTxt=isVenc(p.prazoFechamento)?'Vencido':isUrg(p.prazoFechamento)?'Urgente':fmtD(p.prazoFechamento);
+      const docsP=(p.docs||[]).filter(d=>!d.ok).length;
+      const proxRec=(p.cronograma||[]).filter(c=>!c.recebido&&c.data).sort((a,b)=>a.data.localeCompare(b.data))[0];
+      html+=`<div class="kcard" onclick="abrirPainel(${p.id})">
+        <div class="kc-name">${esc(p.cliente)}<span style="color:${PC[p.prioridade]||'#888'};font-size:10px;font-weight:600;">${esc(p.prioridade)}</span></div>
+        <div class="kc-emp">${esc(p.empreendimento)}</div>
+        <div class="kc-vgv">${fmt(Number(p.vgv))}</div>
+        <div class="kc-foot"><span style="font-size:10px;color:#888">${esc(p.responsavel)}</span><span class="kc-prazo ${prazoC}" style="font-size:10px;">${prazoTxt}</span></div>
+        ${p.tipoContrato?`<div style="font-size:10px;color:#7F77DD;margin-top:2px;">${esc(p.tipoContrato)}</div>`:''}
+        ${proxRec?`<div style="font-size:10px;color:#BA7517;margin-top:2px;">Próx: ${fmtD(proxRec.data)} – ${fmtK(proxRec.valor)}</div>`:''}
+        ${docsP>0?`<div style="font-size:10px;color:#E24B4A;margin-top:3px;">${docsP} doc(s) pendente(s)</div>`:''}
+      </div>`;
+    });
+    html+='</div></div>';
+  });
+  document.getElementById('kanban-area').innerHTML=html;
+}
+
+// ── Lista ─────────────────────────────────────────────────────────
+function renderLista(){
+  const filtered=getFiltered();
+  let rows='';
+  if(!filtered.length) rows=`<tr><td colspan="10" class="empty">Nenhum projeto.</td></tr>`;
+  filtered.forEach(p=>{
+    const prazoC=isVenc(p.prazoFechamento)?'style="color:#E24B4A"':isUrg(p.prazoFechamento)?'style="color:#BA7517"':'';
+    const proxRec=(p.cronograma||[]).filter(c=>!c.recebido&&c.data).sort((a,b)=>a.data.localeCompare(b.data))[0];
+    rows+=`<tr onclick="abrirPainel(${p.id})">
+      <td style="font-weight:500">${esc(p.cliente)}</td>
+      <td style="color:#666">${esc(p.empreendimento)}</td>
+      <td>${catTag(p.categoria)}</td>
+      <td>${tagHTML(p.fase)}</td>
+      <td style="font-weight:500;color:#185FA5;white-space:nowrap">${fmt(Number(p.vgv))}</td>
+      <td style="color:#666;font-size:12px;">${esc(p.tipoContrato||'—')}</td>
+      <td style="color:#666">${esc(p.responsavel)}</td>
+      <td ${prazoC} style="white-space:nowrap">${fmtD(p.prazoFechamento)}</td>
+      <td style="color:${proxRec?'#BA7517':'#aaa'};white-space:nowrap;font-size:12px;">${proxRec?fmtD(proxRec.data)+' '+fmtK(proxRec.valor):'—'}</td>
+      <td style="color:${(p.docs||[]).some(d=>!d.ok)?'#E24B4A':'#639922'};font-size:12px;">${(p.docs||[]).filter(d=>!d.ok).length} pend.</td>
+    </tr>`;
+  });
+  document.getElementById('lista-area').innerHTML=`<table>
+    <thead><tr><th>Cliente</th><th>Empreendimento</th><th>Cat.</th><th>Fase</th><th>VGV</th><th>Tipo contrato</th><th>Responsável</th><th>Prazo</th><th>Próx. recebimento</th><th>Docs</th></tr></thead>
+    <tbody>${rows}</tbody></table>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PAINEL LATERAL
+// ═══════════════════════════════════════════════════════════════════
+function abrirPainel(id){ selectedId=id; document.getElementById('painel').classList.add('open'); renderPainel(); }
+function fecharPainel(){ selectedId=null; document.getElementById('painel').classList.remove('open'); }
+
+function renderPainel(){
+  const p=projetos.find(x=>x.id===selectedId); if(!p) return;
+  document.getElementById('p-nome').textContent=p.cliente;
+  document.getElementById('p-emp').textContent=p.empreendimento||'';
+  renderTabInfo(p); renderTabContrato(p); renderTabCrono(p); renderTabDocs(p); renderTabObs(p);
+}
+
+function renderTabInfo(p){
+  const faseBtns=todasFases().filter(f=>f!==p.fase).map(f=>`<button class="btn" style="font-size:11px;padding:4px 9px;" onclick="mudarFase(${p.id},'${esc(f)}')">${esc(f)}</button>`).join('');
+  document.getElementById('tab-info').innerHTML=`
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">${tagHTML(p.fase)}${catTag(p.categoria)}<span style="font-size:12px;font-weight:600;color:${PC[p.prioridade]||'#888'}">${esc(p.prioridade)}</span></div>
+    <div class="pinfo-grid">
+      <div class="pinfo-cell"><div class="pl">VGV</div><div class="pv" style="color:#185FA5">${fmtMil(p.vgv)}</div></div>
+      <div class="pinfo-cell"><div class="pl">Responsável</div><div class="pv">${esc(p.responsavel||'—')}</div></div>
+      <div class="pinfo-cell"><div class="pl">Contato</div><div class="pv">${fmtD(p.dataContato)}</div></div>
+      <div class="pinfo-cell"><div class="pl">Prazo</div><div class="pv ${isVenc(p.prazoFechamento)?'venc':isUrg(p.prazoFechamento)?'urg':''}">${fmtD(p.prazoFechamento)}</div></div>
+      <div class="pinfo-cell"><div class="pl">Tipo</div><div class="pv">${esc(p.tipo||'—')}</div></div>
+      <div class="pinfo-cell"><div class="pl">Origem</div><div class="pv">${esc(p.origem||'—')}</div></div>
+    </div>
+    <div style="margin-bottom:12px;"><div class="slbl">MOVER PARA FASE</div><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${faseBtns}</div></div>
+    <div style="margin-bottom:12px;"><div class="slbl">OBSERVAÇÕES GERAIS</div><div style="background:#f4f4f2;border-radius:6px;padding:8px 10px;font-size:13px;">${esc(p.obs)||'—'}</div></div>
+    <div><div class="slbl" style="color:#E24B4A">GAPS / PENDÊNCIAS</div><div style="background:#FCEBEB;color:#A32D2D;border-radius:6px;padding:8px 10px;font-size:13px;">${esc(p.gaps)||'—'}</div></div>`;
+}
+
+function renderTabContrato(p){
+  document.getElementById('tab-contrato').innerHTML=`
+    <div class="pinfo-grid">
+      <div class="pinfo-cell" style="grid-column:1/-1"><div class="pl">Tipo de contrato</div><div class="pv" style="color:#534AB7">${esc(p.tipoContrato||'Não definido')}</div></div>
+      <div class="pinfo-cell"><div class="pl">Forma de pagamento</div><div class="pv">${esc(p.formaPgto||'—')}</div></div>
+      <div class="pinfo-cell"><div class="pl">Valor contratado</div><div class="pv" style="color:#185FA5">${p.vgv?fmtMil(p.vgv):'—'}</div></div>
+    </div>
+    ${p.obsContrato?`<div style="margin-top:10px;"><div class="slbl">OBSERVAÇÕES DO CONTRATO</div><div style="background:#f4f4f2;border-radius:6px;padding:8px 10px;font-size:13px;margin-top:4px;">${esc(p.obsContrato)}</div></div>`:''}
+    <button class="btn btn-blue" style="width:100%;margin-top:14px;" onclick="abrirEditar()">Editar informações do contrato</button>`;
+}
+
+function renderTabCrono(p){
+  const parcelas=(p.cronograma||[]).slice().sort((a,b)=>(a.data||'').localeCompare(b.data||''));
+  const tTotal=parcelas.reduce((a,c)=>a+Number(c.valor||0),0);
+  const tRec=parcelas.filter(c=>c.recebido).reduce((a,c)=>a+Number(c.valor||0),0);
+  let rows='';
+  if(!parcelas.length) rows=`<p style="font-size:13px;color:#aaa;margin-bottom:12px;">Nenhum recebimento lançado.</p>`;
+  parcelas.forEach((c,i)=>{
+    const venc=isVenc(c.data)&&!c.recebido, urg=isUrg(c.data)&&!c.recebido;
+    rows+=`<div class="crono-row" style="${c.recebido?'opacity:.5':''}">
+      <span style="${venc?'color:#E24B4A;font-weight:600':urg?'color:#BA7517;font-weight:600':''}">${fmtD(c.data)}${c.desc?`<br><span style="font-size:10px;color:#aaa">${esc(c.desc)}</span>`:''}</span>
+      <span style="font-weight:500;color:#185FA5">${fmtMil(c.valor)}</span>
+      <button onclick="toggleRecebido(${p.id},${i})" title="${c.recebido?'Marcar pendente':'Marcar recebido'}"
+        style="width:22px;height:22px;border-radius:4px;border:1.5px solid ${c.recebido?'#639922':'#ccc'};background:${c.recebido?'#dcfce7':'transparent'};cursor:pointer;font-size:12px;font-weight:700;color:${c.recebido?'#639922':'#aaa'};">${c.recebido?'✓':'○'}</button>
+      <button onclick="removerParcela(${p.id},${i})" style="border:none;background:none;color:#E24B4A;cursor:pointer;font-size:16px;padding:0 2px;">×</button>
+    </div>`;
+  });
+  if(parcelas.length) rows+=`<div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
+    <span style="font-size:12px;color:#185FA5;font-weight:600;">Total: ${fmtMil(tTotal)}</span>
+    <span style="font-size:12px;color:#639922;">Recebido: ${fmtMil(tRec)}</span>
+    <span style="font-size:12px;color:#E24B4A;">Pendente: ${fmtMil(tTotal-tRec)}</span>
+  </div>`;
+  document.getElementById('tab-crono').innerHTML=`
+    <div class="slbl" style="margin-bottom:6px;">PARCELAS DE RECEBIMENTO</div>
+    <div style="font-size:11px;color:#aaa;margin-bottom:10px;">✓ = recebido | vermelho = vencido | laranja = vence em 14 dias</div>
+    ${rows}
+    <div style="margin-top:14px;padding-top:12px;border-top:0.5px solid #e5e5e0;">
+      <div class="slbl" style="margin-bottom:8px;">ADICIONAR PARCELA</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;">
+        <div><label style="font-size:11px;color:#888;display:block;margin-bottom:3px;">Data</label>
+          <input type="date" id="np-data" style="width:100%;padding:7px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;"></div>
+        <div><label style="font-size:11px;color:#888;display:block;margin-bottom:3px;">Valor (R$)</label>
+          <input type="number" id="np-val" min="0" placeholder="0" style="width:100%;padding:7px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;"></div>
+        <button class="btn btn-primary" onclick="addParcela(${p.id})" style="white-space:nowrap;">+ Add</button>
+      </div>
+      <div style="margin-top:8px;"><label style="font-size:11px;color:#888;display:block;margin-bottom:3px;">Descrição (opcional)</label>
+        <input id="np-desc" placeholder="Ex: Medição 01, Sinal..." style="width:100%;padding:7px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;"></div>
+    </div>`;
+}
+
+function renderTabDocs(p){
+  const docs=p.docs||[];
+  let rows=docs.map((d,i)=>`<div class="doc-row">
+    <button class="${'doc-chk'+(d.ok?' ok':'')}" onclick="toggleDoc(${p.id},${i})" style="width:20px;height:20px;border-radius:4px;border:1.5px solid ${d.ok?'#639922':'#ccc'};background:${d.ok?'#dcfce7':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:${d.ok?'#639922':'#aaa'};">${d.ok?'✓':''}</button>
+    <span style="flex:1;font-size:13px;${d.ok?'text-decoration:line-through;color:#aaa':''}">${esc(d.nome)}</span>
+    <button onclick="removerDoc(${p.id},${i})" style="border:none;background:none;color:#E24B4A;cursor:pointer;font-size:16px;padding:0 4px;">×</button>
+  </div>`).join('');
+  if(!rows) rows='<div style="font-size:13px;color:#aaa;margin-bottom:10px;">Nenhum documento.</div>';
+  document.getElementById('tab-docs').innerHTML=`<div class="slbl" style="margin-bottom:6px;">CHECKLIST DE DOCUMENTOS</div>${rows}
+    <div style="display:flex;gap:6px;margin-top:10px;">
+      <input id="new-doc-inp" placeholder="Nome do documento..." style="flex:1;padding:7px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;" onkeydown="if(event.key==='Enter')addDoc(${p.id})">
+      <button class="btn" onclick="addDoc(${p.id})">+ Add</button>
+    </div>`;
+}
+
+function renderTabObs(p){
+  const hist=[...(p.historico||[])].reverse();
+  let cards=hist.map(h=>`<div class="obs-card"><div class="ots">${esc(h.ts)}</div><div style="font-size:13px;">${esc(h.texto)}</div></div>`).join('');
+  if(!cards) cards='<div style="font-size:12px;color:#aaa;margin-bottom:10px;">Nenhuma atualização ainda.</div>';
+  document.getElementById('tab-obs').innerHTML=`<div class="slbl" style="margin-bottom:6px;">HISTÓRICO</div>${cards}
+    <textarea id="nova-obs-inp" rows="3" placeholder="Registrar atualização..." style="width:100%;padding:7px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;resize:vertical;margin-top:6px;"></textarea>
+    <button class="btn btn-blue" style="width:100%;margin-top:6px;" onclick="salvarObs(${p.id})">Salvar observação</button>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// AÇÕES DOS PROJETOS
+// ═══════════════════════════════════════════════════════════════════
+function getProjeto(id){ return projetos.find(x=>x.id===id); }
+
+function mudarFase(id,fase){
+  const p=getProjeto(id); if(!p) return;
+  p.fase=fase; salvarProjeto(p); render(); if(selectedId===id) renderPainel();
+}
+function toggleDoc(id,i){
+  const p=getProjeto(id); if(!p) return;
+  p.docs[i].ok=!p.docs[i].ok; salvarProjeto(p); renderTabDocs(p); renderKanban();
+}
+function removerDoc(id,i){
+  const p=getProjeto(id); if(!p) return;
+  p.docs.splice(i,1); salvarProjeto(p); renderTabDocs(p);
+}
+function addDoc(id){
+  const inp=document.getElementById('new-doc-inp'); if(!inp||!inp.value.trim()) return;
+  const p=getProjeto(id); if(!p) return;
+  p.docs.push({nome:inp.value.trim(),ok:false}); salvarProjeto(p); renderTabDocs(p);
+}
+function salvarObs(id){
+  const inp=document.getElementById('nova-obs-inp'); if(!inp||!inp.value.trim()) return;
+  const p=getProjeto(id); if(!p) return;
+  p.historico=p.historico||[];
+  p.historico.push({texto:inp.value.trim(),ts:nowStr()}); salvarProjeto(p); renderTabObs(p);
+}
+function addParcela(id){
+  const data=document.getElementById('np-data')?.value;
+  const valor=parseFloat(document.getElementById('np-val')?.value)||0;
+  const desc=document.getElementById('np-desc')?.value.trim()||'';
+  if(!data||!valor){alert('Informe data e valor.');return;}
+  const p=getProjeto(id); if(!p) return;
+  p.cronograma=p.cronograma||[];
+  p.cronograma.push({data,valor,desc,recebido:false}); salvarProjeto(p); render(); renderTabCrono(p);
+}
+function toggleRecebido(id,i){
+  const p=getProjeto(id); if(!p) return;
+  p.cronograma[i].recebido=!p.cronograma[i].recebido; salvarProjeto(p); render(); renderTabCrono(p);
+}
+function removerParcela(id,i){
+  const p=getProjeto(id); if(!p) return;
+  p.cronograma.splice(i,1); salvarProjeto(p); render(); renderTabCrono(p);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// FORMULÁRIO NOVO / EDITAR
+// ═══════════════════════════════════════════════════════════════════
+function formHTML(p){
+  const isEdit=!!p, cat=p?.categoria||'comercial';
+  const fases=(cat==='comercial'?config.fasesComerciais:config.fasesObra);
+  return`<h3>${isEdit?'Editar projeto':'Novo projeto'}</h3>
+  <div style="font-size:11px;color:#185FA5;font-weight:600;letter-spacing:.3px;margin-bottom:8px;">DADOS GERAIS</div>
+  <div class="fgrid">
+    <div class="fg full"><label>CLIENTE *</label><input id="f-cliente" value="${esc(p?.cliente||'')}"></div>
+    <div class="fg full"><label>EMPREENDIMENTO</label><input id="f-emp" value="${esc(p?.empreendimento||'')}"></div>
+    <div class="fg"><label>CATEGORIA</label><select id="f-cat" onchange="atualizarFasesForm()">
+      <option value="comercial"${cat==='comercial'?' selected':''}>Comercial / Venda</option>
+      <option value="obra"${cat==='obra'?' selected':''}>Obra / Execução</option>
+    </select></div>
+    <div class="fg"><label>FASE ATUAL</label><select id="f-fase">${fases.map(f=>`<option${p?.fase===f?' selected':''}>${esc(f)}</option>`).join('')}</select></div>
+    <div class="fg"><label>TIPO DE EMPREENDIMENTO</label><select id="f-tipo">${(config.tipos||[]).map(t=>`<option${p?.tipo===t?' selected':''}>${esc(t)}</option>`).join('')}</select></div>
+    <div class="fg"><label>PRIORIDADE</label><select id="f-prio">
+      <option${p?.prioridade==='Alta'?' selected':''}>Alta</option>
+      <option${(!p||p?.prioridade==='Média')?' selected':''}>Média</option>
+      <option${p?.prioridade==='Baixa'?' selected':''}>Baixa</option>
+    </select></div>
+    <div class="fg"><label>RESPONSÁVEL</label><select id="f-resp">
+      <option value="">Selecione...</option>
+      ${(config.responsaveis||[]).map(r=>`<option value="${esc(r.nome)}"${p?.responsavel===r.nome?' selected':''}>${esc(r.nome)} (${esc(r.cargo)})</option>`).join('')}
+    </select></div>
+    <div class="fg"><label>ORIGEM</label><select id="f-orig">
+      <option value="">Selecione...</option>
+      ${(config.origens||[]).map(o=>`<option${p?.origem===o?' selected':''}>${esc(o)}</option>`).join('')}
+    </select></div>
+    <div class="fg"><label>VGV / VALOR (R$)</label><input id="f-vgv" type="number" min="0" value="${p?.vgv||''}"></div>
+    <div class="fg"><label>CONTATO INICIAL</label><input id="f-contato" type="date" value="${p?.dataContato||''}"></div>
+    <div class="fg full"><label>PRAZO DE FECHAMENTO / ENTREGA</label><input id="f-prazo" type="date" value="${p?.prazoFechamento||''}"></div>
+  </div>
+  <hr class="sep">
+  <div style="font-size:11px;color:#534AB7;font-weight:600;letter-spacing:.3px;margin-bottom:8px;">CONTRATO</div>
+  <div class="fgrid">
+    <div class="fg full"><label>TIPO DE CONTRATO</label><select id="f-tpct">
+      <option value="">Não definido</option>
+      ${TIPOS_CONTRATO.map(t=>`<option${p?.tipoContrato===t?' selected':''}>${esc(t)}</option>`).join('')}
+    </select></div>
+    <div class="fg full"><label>FORMA DE PAGAMENTO</label><select id="f-pgto">
+      <option value="">Não definido</option>
+      ${FORMAS_PGTO.map(f=>`<option${p?.formaPgto===f?' selected':''}>${esc(f)}</option>`).join('')}
+    </select></div>
+    <div class="fg full"><label>OBSERVAÇÕES DO CONTRATO</label><textarea id="f-obsct" rows="2">${esc(p?.obsContrato||'')}</textarea></div>
+  </div>
+  <hr class="sep">
+  <div class="fgrid">
+    <div class="fg full"><label>OBSERVAÇÕES GERAIS</label><textarea id="f-obs" rows="2">${esc(p?.obs||'')}</textarea></div>
+    <div class="fg full"><label style="color:#E24B4A">GAPS / PENDÊNCIAS</label><textarea id="f-gaps" rows="2">${esc(p?.gaps||'')}</textarea></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn" onclick="fecharModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="${isEdit?`salvarEditar(${p.id})`:'salvarNovo()'}">Salvar</button>
+  </div>`;
+}
+
+function atualizarFasesForm(){
+  const cat=document.getElementById('f-cat').value;
+  document.getElementById('f-fase').innerHTML=(cat==='comercial'?config.fasesComerciais:config.fasesObra).map(f=>`<option>${esc(f)}</option>`).join('');
+}
+
+function getFormData(){
+  return{
+    cliente:document.getElementById('f-cliente').value.trim(),
+    empreendimento:document.getElementById('f-emp').value.trim(),
+    categoria:document.getElementById('f-cat').value,
+    fase:document.getElementById('f-fase').value,
+    tipo:document.getElementById('f-tipo').value,
+    prioridade:document.getElementById('f-prio').value,
+    responsavel:document.getElementById('f-resp').value,
+    origem:document.getElementById('f-orig').value,
+    vgv:parseFloat(document.getElementById('f-vgv').value)||0,
+    dataContato:document.getElementById('f-contato').value,
+    prazoFechamento:document.getElementById('f-prazo').value,
+    tipoContrato:document.getElementById('f-tpct').value,
+    formaPgto:document.getElementById('f-pgto').value,
+    obsContrato:document.getElementById('f-obsct').value.trim(),
+    obs:document.getElementById('f-obs').value.trim(),
+    gaps:document.getElementById('f-gaps').value.trim(),
+  };
+}
+
+function abrirNovo(){ abrirModal(formHTML(null)); }
+function abrirEditar(){ const p=getProjeto(selectedId); if(!p) return; abrirModal(formHTML(p)); }
+
+function salvarNovo(){
+  const d=getFormData(); if(!d.cliente){alert('Informe o nome do cliente.');return;}
+  const novo={...d,id:Date.now(),docs:[],historico:[],cronograma:[]};
+  projetos.push(novo); salvarProjeto(novo); fecharModal(); render();
+}
+function salvarEditar(id){
+  const d=getFormData(); if(!d.cliente){alert('Informe o nome do cliente.');return;}
+  const i=projetos.findIndex(p=>p.id===id); if(i<0) return;
+  projetos[i]={...projetos[i],...d}; salvarProjeto(projetos[i]); fecharModal(); render();
+  if(selectedId===id) renderPainel();
+}
+
+function confirmarExcluir(){
+  const p=getProjeto(selectedId); if(!p) return;
+  abrirModal(`<h3>Excluir projeto?</h3><p style="font-size:13px;color:#666;margin:8px 0 16px;">Projeto: <strong>${esc(p.cliente)}</strong></p>
+    <div class="btn-row"><button class="btn" onclick="fecharModal()">Cancelar</button><button class="btn btn-danger" onclick="excluir(${p.id})">Excluir</button></div>`);
+}
+function excluir(id){
+  removerProjetoDB(id); projetos=projetos.filter(p=>p.id!==id);
+  fecharModal(); fecharPainel(); render();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════════════════════════
+function abrirModal(html){ document.getElementById('modal-box').innerHTML=html; document.getElementById('modal-bg').classList.remove('hidden'); }
+function fecharModal(){ document.getElementById('modal-bg').classList.add('hidden'); }
+document.getElementById('modal-bg').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-bg')) fecharModal(); });
+
+// ═══════════════════════════════════════════════════════════════════
+// CONFIGURAÇÕES
+// ═══════════════════════════════════════════════════════════════════
+function abrirConfig(){ abrirModal(buildConfigHTML()); }
+
+function buildConfigHTML(){
+  const ls=(k,label,move)=>{
+    const items=config[k]||[];
+    const pills=items.map((item,i)=>`
+      <span style="display:inline-flex;align-items:center;gap:3px;background:#f4f4f2;border:0.5px solid #ddd;border-radius:6px;padding:4px 8px;font-size:12px;">
+        ${move?`<button onclick="cfgMove('${k}',${i},-1)" style="border:none;background:none;cursor:pointer;color:#aaa;font-size:11px;">↑</button><button onclick="cfgMove('${k}',${i},1)" style="border:none;background:none;cursor:pointer;color:#aaa;font-size:11px;">↓</button>`:''}
+        ${esc(item)}
+        <button onclick="cfgRemove('${k}',${i})" style="border:none;background:none;cursor:pointer;color:#E24B4A;font-size:14px;line-height:1;">×</button>
+      </span>`).join('');
+    return`<div style="margin-bottom:14px;">
+      <div style="font-size:11px;color:#888;font-weight:600;letter-spacing:.3px;margin-bottom:6px;">${esc(label)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">${pills||'<span style="font-size:12px;color:#aaa;">Nenhum</span>'}</div>
+      <div style="display:flex;gap:6px;">
+        <input id="cfg-${k}" placeholder="Nova entrada..." style="flex:1;padding:6px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;font-size:13px;" onkeydown="if(event.key==='Enter')cfgAdd('${k}')">
+        <button class="btn" onclick="cfgAdd('${k}')">+ Add</button>
+      </div></div>`;
+  };
+  const respRows=(config.responsaveis||[]).map((r,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:6px;align-items:center;">
+      <input value="${esc(r.nome)}" onchange="cfgRespNome(${i},this.value)" style="padding:6px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;font-size:13px;">
+      <select onchange="cfgRespCargo(${i},this.value)" style="padding:6px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;font-size:13px;">
+        ${(config.cargos||[]).map(c=>`<option${c===r.cargo?' selected':''}>${esc(c)}</option>`).join('')}
+      </select>
+      <button class="btn btn-danger" onclick="cfgRespDel(${i})" style="padding:6px 10px;">×</button>
+    </div>`).join('');
+  return`<h3>Configurações do sistema</h3>
+    ${ls('fasesComerciais','FASES COMERCIAIS',true)}
+    ${ls('fasesObra','FASES DE OBRA',true)}
+    ${ls('tipos','TIPOS DE EMPREENDIMENTO',false)}
+    ${ls('origens','ORIGENS DE LEAD',false)}
+    ${ls('cargos','CARGOS / FUNÇÕES',false)}
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;color:#888;font-weight:600;letter-spacing:.3px;margin-bottom:8px;">RESPONSÁVEIS / EQUIPE</div>
+      ${respRows}
+      <button class="btn" onclick="cfgRespAdd()">+ Adicionar</button>
+    </div>
+    <hr class="sep">
+    <button class="btn btn-danger" style="width:100%;margin-bottom:10px;" onclick="limparTodos()">Apagar todos os projetos</button>
+    <div class="btn-row"><button class="btn" style="flex:1" onclick="fecharModal()">Fechar</button></div>`;
+}
+
+function cfgAdd(k){ const inp=document.getElementById('cfg-'+k); if(!inp||!inp.value.trim()) return; config[k].push(inp.value.trim()); inp.value=''; salvarConfig(config); abrirModal(buildConfigHTML()); }
+function cfgRemove(k,i){ config[k].splice(i,1); salvarConfig(config); abrirModal(buildConfigHTML()); }
+function cfgMove(k,i,d){ const a=config[k],j=i+d; if(j<0||j>=a.length) return; [a[i],a[j]]=[a[j],a[i]]; salvarConfig(config); abrirModal(buildConfigHTML()); }
+function cfgRespNome(i,v){ config.responsaveis[i].nome=v; salvarConfig(config); }
+function cfgRespCargo(i,v){ config.responsaveis[i].cargo=v; salvarConfig(config); }
+function cfgRespDel(i){ config.responsaveis.splice(i,1); salvarConfig(config); abrirModal(buildConfigHTML()); }
+function cfgRespAdd(){ config.responsaveis.push({nome:'',cargo:(config.cargos||[])[0]||''}); salvarConfig(config); abrirModal(buildConfigHTML()); }
+function limparTodos(){
+  if(!window.confirm('Apagar TODOS os projetos? Não pode ser desfeito.')) return;
+  projetos.forEach(p=>removerProjetoDB(p.id)); projetos=[]; fecharModal(); render();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// EXPORTAR CSV
+// ═══════════════════════════════════════════════════════════════════
+function exportCSV(){
+  const cols=['ID','Cliente','Empreendimento','Tipo','Categoria','Fase','VGV','Tipo Contrato','Forma Pgto','Responsável','Contato','Prazo','Prioridade','Origem','Observações','Gaps'];
+  const rows=projetos.map(p=>[p.id,p.cliente,p.empreendimento,p.tipo,p.categoria,p.fase,p.vgv,p.tipoContrato,p.formaPgto,p.responsavel,p.dataContato,p.prazoFechamento,p.prioridade,p.origem,p.obs,p.gaps]
+    .map(v=>'"'+(v||'').toString().replace(/"/g,'""')+'"').join(','));
+  const csv=[cols.join(','),...rows].join('\n');
+  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='pipeline_'+new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')+'.csv'; a.click();
+  const msg=document.getElementById('exp-msg'); msg.style.display='inline'; setTimeout(()=>msg.style.display='none',2500);
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+setView('kanban');
+</script>
+</body>
+</html>
