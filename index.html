@@ -205,25 +205,32 @@ hr.sep{border:none;border-top:0.5px solid #e5e5e0;margin:14px 0;}
 
     <div class="hdr-left">
       <!-- Logo SVG fiel ao original: símbolo geométrico indígena -->
-      <img src="https://raw.githubusercontent.com/sinara1301-blip/dashboard-gerencial/main/logo-abaete.png" class="hdr-logo" style="object-fit:contain;border-radius:6px;">
-        <rect width="54" height="54" rx="6" fill="#0a3820"/>
-        <!-- Chevron superior (cobre/dourado) -->
-        <polyline points="10,28 27,10 44,28" fill="none" stroke="#c8903a" stroke-width="1.2"/>
-        <polyline points="12,30 27,13 42,30" fill="none" stroke="#c8903a" stroke-width="1.2"/>
-        <polyline points="14,32 27,16 40,32" fill="none" stroke="#c8a050" stroke-width="1"/>
-        <!-- Losango central (creme) -->
-        <polygon points="27,18 36,27 27,36 18,27" fill="none" stroke="#f0eacc" stroke-width="1.1"/>
-        <polygon points="27,21 33,27 27,33 21,27" fill="none" stroke="#f0eacc" stroke-width="1"/>
-        <!-- Linhas cruzadas (X) -->
-        <line x1="12" y1="20" x2="42" y2="34" stroke="#f0eacc" stroke-width=".9"/>
-        <line x1="42" y1="20" x2="12" y2="34" stroke="#f0eacc" stroke-width=".9"/>
-        <line x1="13" y1="22" x2="41" y2="32" stroke="#f0eacc" stroke-width=".7" opacity=".6"/>
-        <line x1="41" y1="22" x2="13" y2="32" stroke="#f0eacc" stroke-width=".7" opacity=".6"/>
+      <svg class="hdr-logo" viewBox="0 0 54 60" xmlns="http://www.w3.org/2000/svg">
+        <rect width="54" height="60" rx="6" fill="#080808"/>
+        <!-- Chevron superior duplo cobre -->
+        <polyline points="8,28 27,9 46,28"  fill="none" stroke="#c8853a" stroke-width="1.1"/>
+        <polyline points="10,30 27,12 44,30" fill="none" stroke="#c8853a" stroke-width="1.0"/>
+        <polyline points="12,32 27,15 42,32" fill="none" stroke="#d4a060" stroke-width="0.9"/>
+        <!-- X cruzado esquerda (creme) -->
+        <line x1="5"  y1="22" x2="26" y2="36" stroke="#f0eacc" stroke-width="1"/>
+        <line x1="7"  y1="21" x2="26" y2="33" stroke="#f0eacc" stroke-width="0.8"/>
+        <line x1="9"  y1="20" x2="26" y2="31" stroke="#f0eacc" stroke-width="0.7"/>
+        <!-- X cruzado direita (cobre) -->
+        <line x1="49" y1="22" x2="28" y2="36" stroke="#c8853a" stroke-width="1"/>
+        <line x1="47" y1="21" x2="28" y2="33" stroke="#c8853a" stroke-width="0.8"/>
+        <line x1="45" y1="20" x2="28" y2="31" stroke="#d4a060" stroke-width="0.7"/>
+        <!-- Losango externo creme -->
+        <polygon points="27,17 40,30 27,43 14,30" fill="none" stroke="#f0eacc" stroke-width="1.1"/>
+        <polygon points="27,20 37,30 27,40 17,30" fill="none" stroke="#f0eacc" stroke-width="0.9"/>
+        <polygon points="27,23 34,30 27,37 20,30" fill="none" stroke="#f0eacc" stroke-width="0.8"/>
         <!-- Ponto central cobre -->
-        <circle cx="27" cy="27" r="1.5" fill="#c8903a"/>
-        <!-- Chevron inferior (creme) -->
-        <polyline points="18,33 27,42 36,33" fill="none" stroke="#f0eacc" stroke-width="1.1"/>
-        <polyline points="20,33 27,39 34,33" fill="none" stroke="#f0eacc" stroke-width="1" opacity=".7"/>
+        <circle cx="27" cy="30" r="1.6" fill="#c8853a"/>
+        <!-- Chevron inferior duplo creme -->
+        <polyline points="17,37 27,47 37,37" fill="none" stroke="#f0eacc" stroke-width="1.1"/>
+        <polyline points="19,37 27,45 35,37" fill="none" stroke="#f0eacc" stroke-width="0.9"/>
+        <polyline points="21,37 27,43 33,37" fill="none" stroke="#f0eacc" stroke-width="0.7"/>
+        <!-- Texto ABAETÉ -->
+        <text x="27" y="57" text-anchor="middle" font-family="Georgia,serif" font-size="7" font-weight="700" fill="#f0eacc" letter-spacing="1.5">ABAETÉ</text>
       </svg>
 
       <div class="hdr-brand">
@@ -497,7 +504,8 @@ function render(){
 
 // ── Métricas ──────────────────────────────────────────────────────
 function renderMetrics(){
-  const vgvTotal=projetos.reduce((a,p)=>a+Number(p.vgv),0);
+  const FASES_CONTRATO_FECHADO=[...config.fasesObra,'Contrato Assinado'];
+  const vgvTotal=projetos.filter(p=>FASES_CONTRATO_FECHADO.includes(p.fase)).reduce((a,p)=>a+Number(p.vgv),0);
   const criticos=projetos.filter(p=>isVenc(p.prazoFechamento)||isUrg(p.prazoFechamento)).length;
   const emObra=projetos.filter(p=>p.categoria==='obra').length;
   const mes=new Date(),yy=mes.getFullYear(),mm=mes.getMonth()+1;
@@ -611,8 +619,8 @@ function renderKanban(){
       const docsP=(p.docs||[]).filter(d=>!d.ok).length;
       const proxRec=(p.cronograma||[]).filter(c=>!c.recebido&&c.data).sort((a,b)=>a.data.localeCompare(b.data))[0];
       html+=`<div class="kcard" onclick="abrirPainel(${p.id})">
-        <div class="kc-name">${esc(p.cliente)}<span style="color:${PC[p.prioridade]||'#888'};font-size:10px;font-weight:600;">${esc(p.prioridade)}</span></div>
-        <div class="kc-emp">${esc(p.empreendimento)}</div>
+        <div class="kc-name">${esc(p.empreendimento||p.cliente)}<span style="color:${PC[p.prioridade]||'#888'};font-size:10px;font-weight:600;">${esc(p.prioridade)}</span></div>
+        <div class="kc-emp">${esc(p.cliente)}</div>
         <div class="kc-vgv">${fmt(Number(p.vgv))}</div>
         <div class="kc-foot"><span style="font-size:10px;color:#888">${esc(p.responsavel)}</span><span class="kc-prazo ${prazoC}" style="font-size:10px;">${prazoTxt}</span></div>
         ${p.tipoContrato?`<div style="font-size:10px;color:#7F77DD;margin-top:2px;">${esc(p.tipoContrato)}</div>`:''}
@@ -634,8 +642,8 @@ function renderLista(){
     const prazoC=isVenc(p.prazoFechamento)?'style="color:#E24B4A"':isUrg(p.prazoFechamento)?'style="color:#BA7517"':'';
     const proxRec=(p.cronograma||[]).filter(c=>!c.recebido&&c.data).sort((a,b)=>a.data.localeCompare(b.data))[0];
     rows+=`<tr onclick="abrirPainel(${p.id})">
-      <td style="font-weight:500">${esc(p.cliente)}</td>
-      <td style="color:#666">${esc(p.empreendimento)}</td>
+      <td style="font-weight:500">${esc(p.empreendimento||p.cliente)}</td>
+      <td style="color:#666">${esc(p.cliente)}</td>
       <td>${catTag(p.categoria)}</td>
       <td>${tagHTML(p.fase)}</td>
       <td style="font-weight:500;color:#185FA5;white-space:nowrap">${fmt(Number(p.vgv))}</td>
@@ -647,7 +655,7 @@ function renderLista(){
     </tr>`;
   });
   document.getElementById('lista-area').innerHTML=`<table>
-    <thead><tr><th>Cliente</th><th>Empreendimento</th><th>Cat.</th><th>Fase</th><th>VGV</th><th>Tipo contrato</th><th>Responsável</th><th>Prazo</th><th>Próx. recebimento</th><th>Docs</th></tr></thead>
+    <thead><tr>      <th>Projeto</th><th>Cliente</th><th>Cat.</th><th>Fase</th><th>VGV</th><th>Tipo contrato</th><th>Responsável</th><th>Prazo</th><th>Próx. recebimento</th><th>Docs</th></tr></thead>
     <tbody>${rows}</tbody></table>`;
 }
 
