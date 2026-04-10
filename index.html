@@ -5,14 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Dashboard Gerencial – Abaeté</title>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     CONFIGURAÇÕES FIREBASE
-     Substitua os valores abaixo pelos da sua conta Firebase
-     (Configurações do projeto → Seus aplicativos → firebaseConfig)
-════════════════════════════════════════════════════════════════ -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, onValue, remove, update }
+import { getDatabase, ref, set, onValue, remove }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
@@ -23,40 +18,27 @@ const firebaseConfig = {
   storageBucket:     "dashboard-gerencial-b05a8.firebasestorage.app",
   messagingSenderId: "538961057607",
   appId:             "1:538961057607:web:801dd9d8666c2e1a901e62"
-
 };
 
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
-
-// ── Expõe funções de DB para o restante do código ──────────────────
-window._dbSet    = (path, val) => set(ref(db, path), val);
-window._dbUpdate = (path, val) => update(ref(db, path), val);
-window._dbRemove = (path)      => remove(ref(db, path));
-window._dbListen = (path, cb)  => onValue(ref(db, path), snap => cb(snap.val()));
-
-// ── Inicia quando Firebase estiver pronto ─────────────────────────
-window.addEventListener('load', () => {
-  if(typeof window.initApp === 'function') window.initApp();
-});
+window._dbSet    = (path,val) => set(ref(db,path),val);
+window._dbRemove = (path)     => remove(ref(db,path));
+window._dbListen = (path,cb)  => onValue(ref(db,path),snap=>cb(snap.val()));
+window.addEventListener('load',()=>{ if(typeof window.initApp==='function') window.initApp(); });
 </script>
 
 <style>
-/* ═══════════════════════════════════════════════════════════════
-   ESTILOS GLOBAIS
-   Para alterar cores, fontes ou espaçamentos, edite aqui
-════════════════════════════════════════════════════════════════ */
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f4f2;color:#1a1a18;font-size:14px;}
 button,input,select,textarea{font-family:inherit;font-size:13px;}
-#app{max-width:1440px;margin:0 auto;padding:16px 16px 80px;}
-
-/* ── Header Abaeté ── */
-.hdr{margin-bottom:0;position:relative;overflow:hidden;}
-.hdr-main{background:#0d4a2a;display:flex;align-items:stretch;justify-content:space-between;padding:0 24px;min-height:70px;position:relative;}
+#app{max-width:1440px;margin:0 auto;padding:0 0 80px;}
+/* ── Header ── */
+.hdr{margin-bottom:0;}
+.hdr-main{background:#0d4a2a;display:flex;align-items:stretch;justify-content:space-between;padding:0 24px;min-height:70px;position:relative;overflow:hidden;}
 .hdr-deco{position:absolute;inset:0;opacity:.06;pointer-events:none;overflow:hidden;}
 .hdr-left{display:flex;align-items:center;gap:16px;z-index:1;padding:12px 0;}
-.hdr-logo{width:54px;height:54px;flex-shrink:0;}
+.hdr-logo{width:54px;height:54px;flex-shrink:0;object-fit:contain;border-radius:6px;}
 .hdr-divider{width:1px;background:rgba(255,255,255,.15);margin:14px 0;}
 .hdr-brand{display:flex;flex-direction:column;justify-content:center;}
 .hdr-name{font-size:22px;font-weight:700;color:#f0eacc;letter-spacing:3px;line-height:1;font-family:Georgia,serif;}
@@ -74,33 +56,30 @@ button,input,select,textarea{font-family:inherit;font-size:13px;}
 .hdr-titem{font-size:10px;color:#7aaa6a;display:flex;align-items:center;gap:5px;letter-spacing:.3px;}
 .hdr-tdot{width:4px;height:4px;border-radius:50%;background:#4a9a3a;flex-shrink:0;}
 .hdr-tsep{width:1px;height:10px;background:#1e5030;margin:0 4px;}
-
-/* ── Status de conexão ── */
+/* ── Inner padding ── */
+.inner{padding:0 16px;}
+/* ── Status ── */
 #status-bar{font-size:12px;padding:6px 12px;border-radius:6px;margin-bottom:12px;display:none;}
 #status-bar.online{background:#EAF3DE;color:#27500A;}
 #status-bar.offline{background:#FCEBEB;color:#A32D2D;}
 #status-bar.loading{background:#FAEEDA;color:#633806;}
-
-/* ── Métricas ── */
+/* ── Metrics ── */
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:14px;}
 .metric{background:#e9e9e7;border-radius:8px;padding:10px 12px;}
 .metric .ml{font-size:11px;color:#777;margin-bottom:4px;}
 .metric .mv{font-size:19px;font-weight:500;}
-
-/* ── Cronograma global ── */
-#crono-global{background:#fff;border:0.5px solid #ddd;border-radius:10px;padding:14px 16px;margin-bottom:14px;}
-#crono-global h2{font-size:13px;font-weight:600;color:#888;letter-spacing:.4px;margin-bottom:12px;}
-#crono-chart-wrap{overflow-x:auto;margin-bottom:12px;}
-#crono-chart{display:flex;align-items:flex-end;gap:6px;height:100px;padding-bottom:20px;min-width:400px;}
-.bar-col{display:flex;flex-direction:column;align-items:center;flex:1;min-width:36px;}
-.bar-col .bar{width:100%;border-radius:4px 4px 0 0;min-height:2px;position:relative;}
-.bar-col .blabel{font-size:9px;color:#888;margin-top:4px;white-space:nowrap;}
-.bar-col .bval{font-size:9px;color:#185FA5;font-weight:600;margin-bottom:2px;white-space:nowrap;}
-#crono-table{width:100%;border-collapse:collapse;font-size:12px;}
-#crono-table th{padding:5px 10px;text-align:left;font-size:11px;color:#888;border-bottom:0.5px solid #e5e5e0;white-space:nowrap;}
-#crono-table td{padding:5px 10px;border-bottom:0.5px solid #f0f0ee;}
-
-/* ── Funil ── */
+/* ── Gantt global ── */
+#gantt-global{background:#fff;border:0.5px solid #ddd;border-radius:10px;padding:14px 16px;margin-bottom:14px;}
+#gantt-global h2{font-size:13px;font-weight:600;color:#888;letter-spacing:.4px;margin-bottom:12px;}
+.gantt-wrap{overflow-x:auto;}
+.gantt-table{width:100%;border-collapse:collapse;font-size:12px;min-width:600px;}
+.gantt-table th{padding:5px 8px;text-align:left;font-size:10px;color:#888;border-bottom:0.5px solid #e5e5e0;white-space:nowrap;font-weight:600;}
+.gantt-table td{padding:4px 8px;border-bottom:0.5px solid #f0f0ee;vertical-align:middle;}
+.gantt-bar-wrap{position:relative;height:20px;background:#f0f0ee;border-radius:4px;min-width:200px;}
+.gantt-bar{position:absolute;top:0;height:100%;border-radius:4px;display:flex;align-items:center;padding:0 6px;font-size:10px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;}
+.gantt-pct{font-size:11px;font-weight:600;white-space:nowrap;}
+.gantt-today{position:absolute;top:-2px;bottom:-2px;width:1.5px;background:#E24B4A;z-index:2;}
+/* ── Funnel ── */
 .funnel-wrap{background:#fff;border:0.5px solid #ddd;border-radius:10px;padding:12px 14px;margin-bottom:10px;overflow-x:auto;}
 .funnel-wrap .ftitle{font-size:11px;color:#888;font-weight:600;letter-spacing:.4px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
 .funnels{display:flex;gap:6px;min-width:300px;}
@@ -109,12 +88,10 @@ button,input,select,textarea{font-family:inherit;font-size:13px;}
 .fcell-inner .fn{font-size:17px;font-weight:500;}
 .fcell-inner .fl{font-size:9px;font-weight:600;line-height:1.3;margin-top:2px;}
 .fcell-inner .fv{font-size:9px;opacity:.8;margin-top:1px;}
-
-/* ── Filtros ── */
+/* ── Filters ── */
 .filters{background:#fff;border:0.5px solid #ddd;border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
 .filters input,.filters select{padding:6px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;}
 .viewbtns{display:flex;gap:4px;margin-left:auto;}
-
 /* ── Kanban ── */
 #kanban-area{display:flex;gap:10px;overflow-x:auto;padding-bottom:10px;align-items:flex-start;}
 .kcol{min-width:200px;flex:0 0 200px;}
@@ -123,18 +100,16 @@ button,input,select,textarea{font-family:inherit;font-size:13px;}
 .kcard{background:#fff;border:0.5px solid #e5e5e0;border-radius:8px;padding:10px;cursor:pointer;}
 .kcard:hover{border-color:#bbb;}
 .kcard .kc-name{font-size:13px;font-weight:500;display:flex;justify-content:space-between;gap:4px;}
-.kcard .kc-emp{font-size:11px;color:#888;margin-top:2px;}
+.kcard .kc-cliente{font-size:11px;color:#888;margin-top:2px;}
 .kcard .kc-vgv{font-size:12px;font-weight:500;color:#185FA5;margin-top:4px;}
 .kcard .kc-foot{display:flex;justify-content:space-between;margin-top:4px;flex-wrap:wrap;gap:2px;}
-
 /* ── Lista ── */
 #lista-area{background:#fff;border:0.5px solid #ddd;border-radius:8px;overflow-x:auto;}
 #lista-area table{width:100%;border-collapse:collapse;min-width:700px;}
 #lista-area th{padding:8px 10px;text-align:left;font-size:11px;font-weight:600;color:#888;border-bottom:0.5px solid #e5e5e0;background:#fafaf9;white-space:nowrap;}
 #lista-area td{padding:8px 10px;border-bottom:0.5px solid #f0f0ee;cursor:pointer;}
 #lista-area tr:hover td{background:#f8f8f6;}
-
-/* ── Painel lateral ── */
+/* ── Painel ── */
 #painel{position:fixed;top:0;right:0;bottom:0;width:460px;max-width:100vw;background:#fff;border-left:0.5px solid #ddd;z-index:100;overflow-y:auto;padding:16px;display:none;}
 #painel.open{display:block;}
 .panel-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:10px;}
@@ -149,8 +124,14 @@ button,input,select,textarea{font-family:inherit;font-size:13px;}
 .obs-card{background:#f4f4f2;border-radius:6px;padding:8px 10px;margin-bottom:6px;}
 .obs-card .ots{font-size:10px;color:#aaa;margin-bottom:2px;}
 .doc-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:0.5px solid #f0f0ee;}
-.crono-row{display:grid;grid-template-columns:1fr 1fr auto auto;gap:6px;align-items:center;padding:5px 0;border-bottom:0.5px solid #f0f0ee;font-size:13px;}
-
+/* ── Timeline do projeto ── */
+.tl-etapa{background:#f4f4f2;border-radius:8px;padding:10px 12px;margin-bottom:8px;}
+.tl-etapa-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.tl-etapa-nome{font-size:13px;font-weight:500;}
+.tl-pct-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;}
+.tl-bar-wrap{background:#ddd;border-radius:4px;height:8px;position:relative;overflow:hidden;}
+.tl-bar-fill{height:100%;border-radius:4px;background:#1D9E75;transition:width .3s;}
+.tl-datas{display:flex;justify-content:space-between;font-size:10px;color:#aaa;margin-top:4px;}
 /* ── Modal ── */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;}
 .modal-box{background:#fff;border-radius:12px;border:0.5px solid #ddd;padding:20px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;}
@@ -160,8 +141,6 @@ button,input,select,textarea{font-family:inherit;font-size:13px;}
 .fg label{font-size:11px;color:#888;font-weight:600;letter-spacing:.3px;display:block;margin-bottom:3px;}
 .fg input,.fg select,.fg textarea{width:100%;padding:7px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;}
 .fg textarea{resize:vertical;}
-
-/* ── Utilitários ── */
 .tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;}
 .cat-tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;}
 .btn{padding:6px 13px;border-radius:6px;border:0.5px solid #ccc;background:#f4f4f2;color:#444;cursor:pointer;font-size:13px;}
@@ -181,117 +160,85 @@ hr.sep{border:none;border-top:0.5px solid #e5e5e0;margin:14px 0;}
 </head>
 <body>
 <div id="app">
-<div class="hdr">
-  <div class="hdr-main">
-    <!-- Padrão geométrico decorativo fundo -->
-    <svg class="hdr-deco" viewBox="0 0 900 70" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-      <g stroke="white" stroke-width="0.8" fill="none">
-        <polygon points="60,5 90,35 60,65 30,35"/>
-        <polygon points="60,12 83,35 60,58 37,35"/>
-        <line x1="30" y1="35" x2="90" y2="35"/><line x1="60" y1="5" x2="60" y2="65"/>
-        <polygon points="160,5 190,35 160,65 130,35"/>
-        <polygon points="160,12 183,35 160,58 137,35"/>
-        <line x1="130" y1="35" x2="190" y2="35"/><line x1="160" y1="5" x2="160" y2="65"/>
-        <polygon points="260,5 290,35 260,65 230,35"/>
-        <line x1="230" y1="35" x2="290" y2="35"/><line x1="260" y1="5" x2="260" y2="65"/>
-        <polygon points="700,5 730,35 700,65 670,35"/>
-        <polygon points="700,12 723,35 700,58 677,35"/>
-        <line x1="670" y1="35" x2="730" y2="35"/><line x1="700" y1="5" x2="700" y2="65"/>
-        <polygon points="800,5 830,35 800,65 770,35"/>
-        <line x1="770" y1="35" x2="830" y2="35"/><line x1="800" y1="5" x2="800" y2="65"/>
-        <polygon points="860,5 890,35 860,65 830,35"/>
-        <line x1="830" y1="35" x2="890" y2="35"/><line x1="860" y1="5" x2="860" y2="65"/>
-      </g>
-    </svg>
 
-    <div class="hdr-left">
-      <!-- Logo SVG fiel ao original: símbolo geométrico indígena -->
-      <svg class="hdr-logo" viewBox="0 0 54 60" xmlns="http://www.w3.org/2000/svg">
-        <rect width="54" height="60" rx="6" fill="#080808"/>
-        <!-- Chevron superior duplo cobre -->
-        <polyline points="8,28 27,9 46,28"  fill="none" stroke="#c8853a" stroke-width="1.1"/>
-        <polyline points="10,30 27,12 44,30" fill="none" stroke="#c8853a" stroke-width="1.0"/>
-        <polyline points="12,32 27,15 42,32" fill="none" stroke="#d4a060" stroke-width="0.9"/>
-        <!-- X cruzado esquerda (creme) -->
-        <line x1="5"  y1="22" x2="26" y2="36" stroke="#f0eacc" stroke-width="1"/>
-        <line x1="7"  y1="21" x2="26" y2="33" stroke="#f0eacc" stroke-width="0.8"/>
-        <line x1="9"  y1="20" x2="26" y2="31" stroke="#f0eacc" stroke-width="0.7"/>
-        <!-- X cruzado direita (cobre) -->
-        <line x1="49" y1="22" x2="28" y2="36" stroke="#c8853a" stroke-width="1"/>
-        <line x1="47" y1="21" x2="28" y2="33" stroke="#c8853a" stroke-width="0.8"/>
-        <line x1="45" y1="20" x2="28" y2="31" stroke="#d4a060" stroke-width="0.7"/>
-        <!-- Losango externo creme -->
-        <polygon points="27,17 40,30 27,43 14,30" fill="none" stroke="#f0eacc" stroke-width="1.1"/>
-        <polygon points="27,20 37,30 27,40 17,30" fill="none" stroke="#f0eacc" stroke-width="0.9"/>
-        <polygon points="27,23 34,30 27,37 20,30" fill="none" stroke="#f0eacc" stroke-width="0.8"/>
-        <!-- Ponto central cobre -->
-        <circle cx="27" cy="30" r="1.6" fill="#c8853a"/>
-        <!-- Chevron inferior duplo creme -->
-        <polyline points="17,37 27,47 37,37" fill="none" stroke="#f0eacc" stroke-width="1.1"/>
-        <polyline points="19,37 27,45 35,37" fill="none" stroke="#f0eacc" stroke-width="0.9"/>
-        <polyline points="21,37 27,43 33,37" fill="none" stroke="#f0eacc" stroke-width="0.7"/>
-        <!-- Texto ABAETÉ -->
-        <text x="27" y="57" text-anchor="middle" font-family="Georgia,serif" font-size="7" font-weight="700" fill="#f0eacc" letter-spacing="1.5">ABAETÉ</text>
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-main">
+      <svg class="hdr-deco" viewBox="0 0 900 70" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <g stroke="white" stroke-width="0.8" fill="none">
+          <polygon points="60,5 90,35 60,65 30,35"/><polygon points="60,12 83,35 60,58 37,35"/>
+          <line x1="30" y1="35" x2="90" y2="35"/><line x1="60" y1="5" x2="60" y2="65"/>
+          <polygon points="160,5 190,35 160,65 130,35"/><polygon points="160,12 183,35 160,58 137,35"/>
+          <line x1="130" y1="35" x2="190" y2="35"/><line x1="160" y1="5" x2="160" y2="65"/>
+          <polygon points="700,5 730,35 700,65 670,35"/><polygon points="700,12 723,35 700,58 677,35"/>
+          <line x1="670" y1="35" x2="730" y2="35"/><line x1="700" y1="5" x2="700" y2="65"/>
+          <polygon points="800,5 830,35 800,65 770,35"/>
+          <line x1="770" y1="35" x2="830" y2="35"/><line x1="800" y1="5" x2="800" y2="65"/>
+          <polygon points="860,5 890,35 860,65 830,35"/>
+          <line x1="830" y1="35" x2="890" y2="35"/><line x1="860" y1="5" x2="860" y2="65"/>
+        </g>
       </svg>
-
-      <div class="hdr-brand">
-        <div class="hdr-name">ABAETÉ</div>
-        <div class="hdr-sub">Construtora &amp; Incorporadora</div>
+      <div class="hdr-left">
+        <img src="https://raw.githubusercontent.com/sinara1301-blip/dashboard-gerencial/main/logo-abaete.png"
+             class="hdr-logo" alt="Abaeté"/>
+        <div class="hdr-brand">
+          <div class="hdr-name">ABAETÉ</div>
+          <div class="hdr-sub">Construtora &amp; Incorporadora</div>
+        </div>
+        <div class="hdr-divider"></div>
+        <div class="hdr-titlewrap">
+          <div class="hdr-title">Dashboard Gerencial</div>
+          <div class="hdr-titlesub">Pipeline de projetos · Tempo real</div>
+        </div>
       </div>
-
-      <div class="hdr-divider"></div>
-
-      <div class="hdr-titlewrap">
-        <div class="hdr-title">Dashboard Gerencial</div>
-        <div class="hdr-titlesub">Pipeline de projetos · Tempo real</div>
+      <div class="hdr-right">
+        <span id="sync-indicator" style="font-size:11px;color:#7aaa6a;"></span>
+        <span id="exp-msg" style="font-size:12px;color:#8fbb5a;font-weight:500;display:none;">CSV exportado!</span>
+        <button class="hdr-btn hdr-btn-ghost" onclick="exportCSV()">Exportar CSV</button>
+        <button class="hdr-btn hdr-btn-ghost" onclick="abrirConfig()">Configurações</button>
+        <button class="hdr-btn hdr-btn-prim" onclick="abrirNovo()">+ Novo projeto</button>
       </div>
     </div>
-
-    <div class="hdr-right">
-      <span id="sync-indicator" style="font-size:11px;color:#7aaa6a;"></span>
-      <span id="exp-msg" style="font-size:12px;color:#8fbb5a;font-weight:500;display:none;">CSV exportado!</span>
-      <button class="hdr-btn hdr-btn-ghost" onclick="exportCSV()">Exportar CSV</button>
-      <button class="hdr-btn hdr-btn-ghost" onclick="abrirConfig()">Configurações</button>
-      <button class="hdr-btn hdr-btn-prim" onclick="abrirNovo()">+ Novo projeto</button>
+    <div class="hdr-tagline">
+      <div class="hdr-titem"><div class="hdr-tdot"></div>Construindo com propósito</div>
+      <div class="hdr-tsep"></div>
+      <div class="hdr-titem"><div class="hdr-tdot"></div>Incorporação responsável</div>
+      <div class="hdr-tsep"></div>
+      <div class="hdr-titem"><div class="hdr-tdot"></div>Resultados que ficam</div>
     </div>
   </div>
 
-  <div class="hdr-tagline">
-    <div class="hdr-titem"><div class="hdr-tdot"></div>Construindo com propósito</div>
-    <div class="hdr-tsep"></div>
-    <div class="hdr-titem"><div class="hdr-tdot"></div>Incorporação responsável</div>
-    <div class="hdr-tsep"></div>
-    <div class="hdr-titem"><div class="hdr-tdot"></div>Resultados que ficam</div>
+  <div class="inner">
+    <div id="status-bar"></div>
+    <div class="metrics" id="metrics"></div>
+    <div id="gantt-global"></div>
+    <div id="funnels"></div>
+    <div class="filters">
+      <input id="busca" placeholder="Buscar projeto ou cliente..." oninput="render()" style="min-width:180px;flex:1 1 180px;">
+      <select id="fcat" onchange="setFiltroFase('Todas');render()">
+        <option value="todas">Todas as categorias</option>
+        <option value="comercial">Comercial</option>
+        <option value="obra">Obra</option>
+      </select>
+      <select id="fresp" onchange="render()"><option value="Todos">Todos responsáveis</option></select>
+      <select id="fprio" onchange="render()">
+        <option value="Todas">Todas prioridades</option>
+        <option>Alta</option><option>Média</option><option>Baixa</option>
+      </select>
+      <div class="viewbtns">
+        <button class="btn" id="btn-kanban" onclick="setView('kanban')">Kanban</button>
+        <button class="btn" id="btn-lista"  onclick="setView('lista')">Lista</button>
+      </div>
+    </div>
+    <div id="kanban-area"></div>
+    <div id="lista-area" class="hidden"></div>
   </div>
 </div>
-  <div id="status-bar"></div>
-  <div class="metrics" id="metrics"></div>
-  <div id="crono-global"></div>
-  <div id="funnels"></div>
-  <div class="filters">
-    <input id="busca" placeholder="Buscar cliente ou empreendimento..." oninput="render()" style="min-width:180px;flex:1 1 180px;">
-    <select id="fcat" onchange="setFiltroFase('Todas');render()">
-      <option value="todas">Todas as categorias</option>
-      <option value="comercial">Comercial</option>
-      <option value="obra">Obra</option>
-    </select>
-    <select id="fresp" onchange="render()"><option value="Todos">Todos responsáveis</option></select>
-    <select id="fprio" onchange="render()">
-      <option value="Todas">Todas prioridades</option>
-      <option>Alta</option><option>Média</option><option>Baixa</option>
-    </select>
-    <div class="viewbtns">
-      <button class="btn" id="btn-kanban" onclick="setView('kanban')">Kanban</button>
-      <button class="btn" id="btn-lista"  onclick="setView('lista')">Lista</button>
-    </div>
-  </div>
-  <div id="kanban-area"></div>
-  <div id="lista-area" class="hidden"></div>
-</div>
 
+<!-- PAINEL LATERAL -->
 <div id="painel">
   <div class="panel-hdr">
-    <div style="flex:1;min-width:0;"><h2 id="p-nome"></h2><div style="font-size:12px;color:#888" id="p-emp"></div></div>
+    <div style="flex:1;min-width:0;"><h2 id="p-nome"></h2><div style="font-size:12px;color:#888" id="p-cliente"></div></div>
     <div style="display:flex;gap:4px;flex-shrink:0;">
       <button class="btn btn-blue" onclick="abrirEditar()">Editar</button>
       <button class="btn btn-danger" onclick="confirmarExcluir()">Excluir</button>
@@ -301,13 +248,13 @@ hr.sep{border:none;border-top:0.5px solid #e5e5e0;margin:14px 0;}
   <div class="ptabs">
     <button class="ptab on" onclick="setTab('info',this)">Informações</button>
     <button class="ptab"    onclick="setTab('contrato',this)">Contrato</button>
-    <button class="ptab"    onclick="setTab('crono',this)">Recebimentos</button>
+    <button class="ptab"    onclick="setTab('timeline',this)">Timeline</button>
     <button class="ptab"    onclick="setTab('docs',this)">Documentos</button>
     <button class="ptab"    onclick="setTab('obs',this)">Histórico</button>
   </div>
   <div id="tab-info"></div>
   <div id="tab-contrato" class="hidden"></div>
-  <div id="tab-crono"    class="hidden"></div>
+  <div id="tab-timeline" class="hidden"></div>
   <div id="tab-docs"     class="hidden"></div>
   <div id="tab-obs"      class="hidden"></div>
 </div>
@@ -317,147 +264,97 @@ hr.sep{border:none;border-top:0.5px solid #e5e5e0;margin:14px 0;}
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════════════
-// CONFIG DEFAULT
-// Edite aqui os valores padrão do sistema
-// ═══════════════════════════════════════════════════════════════════
-const TIPOS_CONTRATO = [
-  'Incorporação','Loteamento','Empreitada global',
-  'Por administração e cessão de mão de obra',
-  'Administração e empreitada de mão de obra','Outro'
-];
-const FORMAS_PGTO = [
-  'À vista','Parcelado (boleto)','Financiamento bancário','Permuta','Misto','A definir'
-];
-const CFG_DEFAULT = {
-  fasesComerciais: ['Captação','Negociação','Ajustes','Fechamento','Contrato Assinado'],
-  fasesObra:       ['Projeto / Licenciamento','Orçamento','Licitação','Em Obra','Vistoria / Entrega','Concluído'],
-  responsaveis:    [
+const KEY='pipeline_v6';
+function loadLocal(){try{const s=localStorage.getItem(KEY);return s?JSON.parse(s):null;}catch{return null;}}
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify({projetos,config}));}catch{}}
+
+const TIPOS_CONTRATO=['Incorporação','Loteamento','Empreitada global','Por administração e cessão de mão de obra','Administração e empreitada de mão de obra','Outro'];
+const FORMAS_PGTO=['À vista','Parcelado (boleto)','Financiamento bancário','Permuta','Misto','A definir'];
+const FASES_FECHADO=['Contrato Assinado','Projeto / Licenciamento','Orçamento','Licitação','Em Obra','Vistoria / Entrega','Concluído'];
+
+const CFG_DEFAULT={
+  fasesComerciais:['Captação','Negociação','Ajustes','Fechamento','Contrato Assinado'],
+  fasesObra:['Projeto / Licenciamento','Orçamento','Licitação','Em Obra','Vistoria / Entrega','Concluído'],
+  responsaveis:[
     {nome:'Ana Lima',cargo:'Corretor'},{nome:'Carlos Mota',cargo:'Corretor'},
     {nome:'Fernanda Rocha',cargo:'Engenheiro'},{nome:'Ricardo Souza',cargo:'Orçamentista'},
     {nome:'Beatriz Nunes',cargo:'Diretor Comercial'},
   ],
-  cargos:  ['Diretor Comercial','Corretor','Engenheiro','Arquiteto','Orçamentista','Gerente de Obra','Responsável Técnico'],
-  tipos:   ['Residencial Vertical','Residencial Horizontal','Comercial','Misto','Industrial','Outro'],
-  origens: ['Indicação','Prospecção ativa','Site / Digital','Parceiro','Evento / Feira','Licitação pública','Outro'],
+  cargos:['Diretor Comercial','Corretor','Engenheiro','Arquiteto','Orçamentista','Gerente de Obra','Responsável Técnico'],
+  tipos:['Residencial Vertical','Residencial Horizontal','Comercial','Misto','Industrial','Outro'],
+  origens:['Indicação','Prospecção ativa','Site / Digital','Parceiro','Evento / Feira','Licitação pública','Outro'],
 };
 
-// ═══════════════════════════════════════════════════════════════════
-// PALETA DE CORES DAS FASES
-// Adicione mais objetos {bg,text,border} para suportar mais fases
-// ═══════════════════════════════════════════════════════════════════
-const PALETAS = [
-  {bg:'#E6F1FB',text:'#0C447C',border:'#378ADD'},
-  {bg:'#FAEEDA',text:'#633806',border:'#BA7517'},
-  {bg:'#FBEAF0',text:'#72243E',border:'#D4537E'},
-  {bg:'#EEEDFE',text:'#3C3489',border:'#7F77DD'},
-  {bg:'#EAF3DE',text:'#27500A',border:'#639922'},
-  {bg:'#E1F5EE',text:'#085041',border:'#1D9E75'},
-  {bg:'#FAECE7',text:'#993C1D',border:'#D85A30'},
-  {bg:'#F1EFE8',text:'#5F5E5A',border:'#888780'},
-  {bg:'#FCF0F0',text:'#A32D2D',border:'#E24B4A'},
-  {bg:'#EEF9E8',text:'#3B6D11',border:'#97C459'},
+const PALETAS=[
+  {bg:'#E6F1FB',text:'#0C447C',border:'#378ADD'},{bg:'#FAEEDA',text:'#633806',border:'#BA7517'},
+  {bg:'#FBEAF0',text:'#72243E',border:'#D4537E'},{bg:'#EEEDFE',text:'#3C3489',border:'#7F77DD'},
+  {bg:'#EAF3DE',text:'#27500A',border:'#639922'},{bg:'#E1F5EE',text:'#085041',border:'#1D9E75'},
+  {bg:'#FAECE7',text:'#993C1D',border:'#D85A30'},{bg:'#F1EFE8',text:'#5F5E5A',border:'#888780'},
+  {bg:'#FCF0F0',text:'#A32D2D',border:'#E24B4A'},{bg:'#EEF9E8',text:'#3B6D11',border:'#97C459'},
 ];
-const PC = {Alta:'#E24B4A',Média:'#BA7517',Baixa:'#639922'};
+const PC={Alta:'#E24B4A',Média:'#BA7517',Baixa:'#639922'};
+const GANTT_CORES=['#1D9E75','#378ADD','#7F77DD','#D85A30','#BA7517','#639922','#D4537E'];
 
-// ═══════════════════════════════════════════════════════════════════
-// ESTADO GLOBAL
-// ═══════════════════════════════════════════════════════════════════
-let projetos   = [];
-let config     = JSON.parse(JSON.stringify(CFG_DEFAULT));
-let selectedId = null;
-let filtroFase = 'Todas';
-let filtroFaseCat = 'todas';
-let currentView  = 'kanban';
-let currentTab   = 'info';
-let dbReady      = false;
+const initData=loadLocal();
+let projetos=initData?.projetos||[];
+let config=initData?.config||JSON.parse(JSON.stringify(CFG_DEFAULT));
+let selectedId=null,filtroFase='Todas',filtroFaseCat='todas',currentView='kanban',currentTab='info';
+let dbReady=false;
 
-// ═══════════════════════════════════════════════════════════════════
-// FUNÇÕES DE DADOS (Firebase)
-// ═══════════════════════════════════════════════════════════════════
-function setStatus(tipo, msg) {
-  const bar = document.getElementById('status-bar');
-  const ind = document.getElementById('sync-indicator');
-  bar.className = tipo; bar.textContent = msg;
-  bar.style.display = msg ? 'block' : 'none';
-  ind.textContent = tipo === 'loading' ? '⟳ Sincronizando...' : tipo === 'online' ? '● Online' : '';
-  ind.style.color = tipo === 'online' ? '#639922' : '#BA7517';
+function todasFases(){return[...config.fasesComerciais,...config.fasesObra];}
+function corFase(f){const all=todasFases();return PALETAS[all.indexOf(f)%PALETAS.length]||PALETAS[0];}
+function fmt(v){return'R$ '+(Number(v)/1e6).toFixed(2).replace('.',',')+'M';}
+function fmtMil(v){return'R$ '+Number(v).toLocaleString('pt-BR');}
+function fmtD(d){return d?new Date(d+'T00:00:00').toLocaleDateString('pt-BR'):'—';}
+const today=new Date(); today.setHours(0,0,0,0);
+function diffD(d){return d?Math.round((new Date(d+'T00:00:00')-today)/864e5):null;}
+function isVenc(d){const x=diffD(d);return x!==null&&x<0;}
+function isUrg(d){const x=diffD(d);return x!==null&&x>=0&&x<=14;}
+function nowStr(){return new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function tagHTML(f){const c=corFase(f);return`<span class="tag" style="background:${c.bg};color:${c.text};border:0.5px solid ${c.border};">${esc(f)}</span>`;}
+function catTag(cat){return cat==='obra'?`<span class="cat-tag" style="background:#E1F5EE;color:#085041;">Obra</span>`:`<span class="cat-tag" style="background:#E6F1FB;color:#0C447C;">Comercial</span>`;}
+
+// ── Firebase ──────────────────────────────────────────────────────
+function setStatus(tipo,msg){
+  const bar=document.getElementById('status-bar'),ind=document.getElementById('sync-indicator');
+  bar.className=tipo; bar.textContent=msg; bar.style.display=msg?'block':'none';
+  ind.textContent=tipo==='loading'?'⟳ Sincronizando...':tipo==='online'?'● Online':'';
+  ind.style.color=tipo==='online'?'#7aaa6a':'#BA7517';
+}
+function salvarProjeto(p){
+  if(!dbReady){saveLocal();return;}
+  setStatus('loading','');
+  window._dbSet(`projetos/${p.id}`,p).then(()=>setStatus('online','')).catch(()=>setStatus('offline','Erro ao salvar.'));
+}
+function removerProjetoDB(id){
+  if(!dbReady){projetos=projetos.filter(p=>p.id!==id);saveLocal();return;}
+  window._dbRemove(`projetos/${id}`).catch(()=>setStatus('offline','Erro ao remover.'));
+}
+function salvarConfig(cfg){
+  if(!dbReady){config=cfg;saveLocal();return;}
+  window._dbSet('config',cfg).catch(()=>setStatus('offline','Erro ao salvar config.'));
 }
 
-function salvarProjeto(p) {
-  if (!dbReady) return;
-  setStatus('loading', 'Salvando...');
-  window._dbSet(`projetos/${p.id}`, p)
-    .then(() => setStatus('online', ''))
-    .catch(() => setStatus('offline', 'Erro ao salvar. Verifique a conexão.'));
-}
-function removerProjetoDB(id) {
-  if (!dbReady) return;
-  window._dbRemove(`projetos/${id}`)
-    .then(() => setStatus('online', ''))
-    .catch(() => setStatus('offline', 'Erro ao remover.'));
-}
-function salvarConfig(cfg) {
-  if (!dbReady) return;
-  window._dbSet('config', cfg)
-    .catch(() => setStatus('offline', 'Erro ao salvar configurações.'));
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// INICIALIZAÇÃO — aguarda Firebase estar pronto
-// ═══════════════════════════════════════════════════════════════════
-window.initApp = function() {
-  setStatus('loading', 'Conectando ao banco de dados...');
-
-  // Escuta projetos em tempo real
-  window._dbListen('projetos', data => {
-    projetos = data ? Object.values(data) : [];
-    render();
-    if (selectedId) renderPainel();
+window.initApp=function(){
+  setStatus('loading','Conectando...');
+  window._dbListen('projetos',data=>{
+    projetos=data?Object.values(data):[];
+    render(); if(selectedId) renderPainel();
   });
-
-  // Escuta configurações em tempo real
-  window._dbListen('config', data => {
-    if (data) {
-      config = data;
-    } else {
-      // Primeira vez: salva config padrão
-      salvarConfig(CFG_DEFAULT);
-    }
-    dbReady = true;
-    setStatus('online', '');
-    render();
+  window._dbListen('config',data=>{
+    if(data){config=data;}else{salvarConfig(CFG_DEFAULT);}
+    dbReady=true; setStatus('online',''); render();
   });
 };
-
-// Fallback: se Firebase não carregar, usa dados locais
-setTimeout(() => {
-  if (!dbReady) {
-    setStatus('offline', '⚠️ Firebase não conectado. Configure as credenciais no topo do arquivo HTML. Os dados serão salvos localmente.');
-    dbReady = false;
-    try { const s=localStorage.getItem('pipeline_local'); if(s){const d=JSON.parse(s);projetos=d.projetos||[];config=d.config||CFG_DEFAULT;} } catch{}
-    render();
+setTimeout(()=>{
+  if(!dbReady){
+    setStatus('offline','Firebase não conectado. Configure as credenciais no HTML. Dados salvos localmente.');
+    dbReady=false; render();
   }
-}, 4000);
+},4000);
 
-// ═══════════════════════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════════════════════
-function todasFases(){ return [...config.fasesComerciais,...config.fasesObra]; }
-function corFase(f){ const all=todasFases(); return PALETAS[all.indexOf(f)%PALETAS.length]||PALETAS[0]; }
-function fmt(v){ return 'R$ '+(Number(v)/1e6).toFixed(2).replace('.',',')+'M'; }
-function fmtK(v){ return Number(v)>=1000000?fmt(v):'R$ '+Number(v).toLocaleString('pt-BR'); }
-function fmtMil(v){ return 'R$ '+Number(v).toLocaleString('pt-BR'); }
-function fmtD(d){ return d?new Date(d+'T00:00:00').toLocaleDateString('pt-BR'):'—'; }
-const today=new Date(); today.setHours(0,0,0,0);
-function diffD(d){ return d?Math.round((new Date(d+'T00:00:00')-today)/864e5):null; }
-function isVenc(d){ const x=diffD(d); return x!==null&&x<0; }
-function isUrg(d){ const x=diffD(d); return x!==null&&x>=0&&x<=14; }
-function nowStr(){ return new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function tagHTML(f){ const c=corFase(f); return `<span class="tag" style="background:${c.bg};color:${c.text};border:0.5px solid ${c.border};">${esc(f)}</span>`; }
-function catTag(cat){ return cat==='obra'?`<span class="cat-tag" style="background:#E1F5EE;color:#085041;">Obra</span>`:`<span class="cat-tag" style="background:#E6F1FB;color:#0C447C;">Comercial</span>`; }
-
+// ── Filtros / View ────────────────────────────────────────────────
 function getFiltered(){
   const busca=document.getElementById('busca')?.value.toLowerCase()||'';
   const fcat=document.getElementById('fcat')?.value||'todas';
@@ -468,7 +365,7 @@ function getFiltered(){
     if(filtroFase!=='Todas'&&p.fase!==filtroFase) return false;
     if(fresp!=='Todos'&&p.responsavel!==fresp) return false;
     if(fprio!=='Todas'&&p.prioridade!==fprio) return false;
-    if(busca&&!p.cliente.toLowerCase().includes(busca)&&!(p.empreendimento||'').toLowerCase().includes(busca)) return false;
+    if(busca&&!(p.empreendimento||'').toLowerCase().includes(busca)&&!p.cliente.toLowerCase().includes(busca)) return false;
     return true;
   });
 }
@@ -489,89 +386,92 @@ function setTab(t,el){
   currentTab=t;
   document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on'));
   if(el) el.classList.add('on');
-  ['info','contrato','crono','docs','obs'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('hidden',x!==t));
+  ['info','contrato','timeline','docs','obs'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('hidden',x!==t));
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// RENDER PRINCIPAL
-// ═══════════════════════════════════════════════════════════════════
+// ── Render principal ──────────────────────────────────────────────
 function render(){
   renderMetrics();
-  buildCronoGlobal();
+  renderGanttGlobal();
   renderFunnels();
   renderResponsaveisSelect();
   if(currentView==='kanban') renderKanban(); else renderLista();
 }
 
-// ── Métricas ──────────────────────────────────────────────────────
 function renderMetrics(){
-  const FASES_CONTRATO_FECHADO=[...config.fasesObra,'Contrato Assinado'];
-  const vgvTotal=projetos.filter(p=>FASES_CONTRATO_FECHADO.includes(p.fase)).reduce((a,p)=>a+Number(p.vgv),0);
+  const vgvFechado=projetos.filter(p=>FASES_FECHADO.includes(p.fase)).reduce((a,p)=>a+Number(p.vgv),0);
   const criticos=projetos.filter(p=>isVenc(p.prazoFechamento)||isUrg(p.prazoFechamento)).length;
   const emObra=projetos.filter(p=>p.categoria==='obra').length;
-  const mes=new Date(),yy=mes.getFullYear(),mm=mes.getMonth()+1;
-  const recMes=projetos.reduce((a,p)=>a+(p.cronograma||[]).filter(c=>{
-    if(!c.data||c.recebido) return false;
-    const d=new Date(c.data+'T00:00:00');
-    return d.getFullYear()===yy&&d.getMonth()+1===mm;
-  }).reduce((s,c)=>s+Number(c.valor||0),0),0);
+  const pipeline=projetos.filter(p=>p.categoria==='comercial'&&!FASES_FECHADO.includes(p.fase)).length;
   document.getElementById('metrics').innerHTML=[
-    {l:'VGV total pipeline',v:fmt(vgvTotal),c:'#185FA5'},
-    {l:'Projetos ativos',v:projetos.length,c:'#1a1a18'},
-    {l:'Prazos críticos',v:criticos,c:'#E24B4A'},
+    {l:'VGV contratos fechados',v:fmt(vgvFechado),c:'#3B6D11'},
+    {l:'Total de projetos',v:projetos.length,c:'#1a1a18'},
+    {l:'Em negociação',v:pipeline,c:'#185FA5'},
     {l:'Em obra / execução',v:emObra,c:'#3B6D11'},
-    {l:'A receber este mês',v:fmtK(recMes),c:recMes>0?'#BA7517':'#aaa'},
+    {l:'Prazos críticos',v:criticos,c:'#E24B4A'},
   ].map(m=>`<div class="metric"><div class="ml">${esc(m.l)}</div><div class="mv" style="color:${m.c}">${m.v}</div></div>`).join('');
 }
 
-// ── Cronograma global ─────────────────────────────────────────────
-function buildCronoGlobal(){
-  const map={};
-  projetos.forEach(p=>(p.cronograma||[]).forEach(c=>{
-    if(!c.data||!c.valor) return;
-    const d=new Date(c.data+'T00:00:00');
-    const key=d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0');
-    const lbl=d.toLocaleString('pt-BR',{month:'short'}).replace('.','')+'/'+(d.getFullYear()+'').slice(-2);
-    if(!map[key]) map[key]={lbl,total:0,recebido:0,pendente:0,n:0};
-    const v=Number(c.valor)||0;
-    map[key].total+=v; map[key].n++;
-    if(c.recebido) map[key].recebido+=v; else map[key].pendente+=v;
-  }));
-  const keys=Object.keys(map).sort();
-  if(!keys.length){
-    document.getElementById('crono-global').innerHTML=`<h2>CRONOGRAMA DE RECEBIMENTOS</h2><p style="font-size:13px;color:#aaa;">Nenhum recebimento lançado ainda.</p>`;
+// ── Gantt Global ──────────────────────────────────────────────────
+function renderGanttGlobal(){
+  const obras=projetos.filter(p=>p.dataInicio&&p.dataFim);
+  if(!obras.length){
+    document.getElementById('gantt-global').innerHTML=`<h2>TIMELINE DE EXECUÇÃO DE OBRAS</h2><p style="font-size:13px;color:#aaa;">Nenhuma obra com datas cadastradas. Adicione datas de início e fim nos projetos.</p>`;
     return;
   }
-  const maxVal=Math.max(...keys.map(k=>map[k].total),1);
-  const hoje=new Date(), yy=hoje.getFullYear(), mm=hoje.getMonth()+1;
-  let bars='';
-  keys.forEach(k=>{
-    const m=map[k]; const [y,mo]=k.split('-');
-    const isMes=yy===Number(y)&&mm===Number(mo);
-    const h=Math.round((m.total/maxVal)*80)+2;
-    const rh=Math.round((m.recebido/maxVal)*80);
-    bars+=`<div class="bar-col" title="${m.lbl}: ${fmtMil(m.total)}">
-      <div class="bval">${fmtK(m.total)}</div>
-      <div class="bar" style="height:${h}px;background:${isMes?'#1D9E75':'#378ADD'};">
-        ${rh>0?`<div style="position:absolute;bottom:0;left:0;right:0;height:${rh}px;background:${isMes?'#085041':'#0C447C'};border-radius:4px 4px 0 0;"></div>`:''}
-      </div>
-      <div class="blabel">${m.lbl}</div>
-    </div>`;
+  const datas=obras.flatMap(p=>[new Date(p.dataInicio+'T00:00:00'),new Date(p.dataFim+'T00:00:00')]);
+  const minD=new Date(Math.min(...datas)); const maxD=new Date(Math.max(...datas));
+  minD.setDate(1); maxD.setMonth(maxD.getMonth()+1,0);
+  const totalMs=maxD-minD||1;
+  const todayPct=Math.min(100,Math.max(0,((today-minD)/totalMs)*100));
+
+  const meses=[];
+  let cur=new Date(minD);
+  while(cur<=maxD){
+    meses.push(cur.toLocaleString('pt-BR',{month:'short',year:'2-digit'}).replace('. ','/'));
+    cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);
+  }
+  const thMeses=meses.map(m=>`<th style="font-weight:400;text-align:center;font-size:9px;">${m}</th>`).join('');
+
+  let rows='';
+  obras.forEach((p,i)=>{
+    const ini=new Date(p.dataInicio+'T00:00:00');
+    const fim=new Date(p.dataFim+'T00:00:00');
+    const left=((ini-minD)/totalMs)*100;
+    const width=Math.max(1,((fim-ini)/totalMs)*100);
+    const pct=Number(p.pctConclusao||0);
+    const cor=GANTT_CORES[i%GANTT_CORES.length];
+    const statusCor=pct>=100?'#639922':isVenc(p.dataFim)?'#E24B4A':'#1D9E75';
+    rows+=`<tr onclick="abrirPainel(${p.id})" style="cursor:pointer;" onmouseover="this.style.background='#f8f8f6'" onmouseout="this.style.background=''">
+      <td style="font-size:12px;font-weight:500;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;">${esc(p.empreendimento||p.cliente)}</td>
+      <td>
+        <div class="gantt-bar-wrap">
+          <div class="gantt-today" style="left:${todayPct}%"></div>
+          <div class="gantt-bar" style="left:${left}%;width:${width}%;background:${cor};">
+            ${width>8?esc(p.empreendimento||p.cliente):''}
+          </div>
+        </div>
+      </td>
+      <td><span class="gantt-pct" style="color:${statusCor}">${pct}%</span></td>
+      <td style="font-size:11px;color:#888;white-space:nowrap;">${fmtD(p.dataInicio)}</td>
+      <td style="font-size:11px;color:${isVenc(p.dataFim)?'#E24B4A':'#888'};white-space:nowrap;">${fmtD(p.dataFim)}</td>
+    </tr>`;
   });
-  const tTotal=keys.reduce((a,k)=>a+map[k].total,0);
-  const tRec=keys.reduce((a,k)=>a+map[k].recebido,0);
-  let trows=keys.map(k=>`<tr><td>${map[k].lbl}</td><td style="font-weight:500;color:#185FA5">${fmtMil(map[k].total)}</td><td style="color:#639922">${fmtMil(map[k].recebido)}</td><td style="color:#E24B4A">${fmtMil(map[k].pendente)}</td><td style="color:#888;font-size:11px;">${map[k].n} parcela(s)</td></tr>`).join('');
-  trows+=`<tr style="background:#f4f4f2;font-weight:600;"><td>Total</td><td style="color:#185FA5">${fmtMil(tTotal)}</td><td style="color:#639922">${fmtMil(tRec)}</td><td style="color:#E24B4A">${fmtMil(tTotal-tRec)}</td><td></td></tr>`;
-  document.getElementById('crono-global').innerHTML=`
-    <h2>CRONOGRAMA DE RECEBIMENTOS <span style="font-size:11px;font-weight:400;color:#aaa;margin-left:6px;">azul escuro=recebido | azul claro=pendente | verde=mês atual</span></h2>
-    <div id="crono-chart-wrap"><div id="crono-chart">${bars}</div></div>
-    <div style="overflow-x:auto"><table id="crono-table">
-      <thead><tr><th>Mês</th><th>Total</th><th>Recebido</th><th>Pendente</th><th>Parcelas</th></tr></thead>
-      <tbody>${trows}</tbody>
-    </table></div>`;
+
+  document.getElementById('gantt-global').innerHTML=`
+    <h2>TIMELINE DE EXECUÇÃO DE OBRAS <span style="font-size:10px;font-weight:400;color:#aaa;margin-left:6px;">linha vermelha = hoje</span></h2>
+    <div class="gantt-wrap">
+      <table class="gantt-table">
+        <thead><tr>
+          <th style="min-width:140px;">Projeto</th>
+          <th style="width:100%;">Linha do tempo (${meses[0]} → ${meses[meses.length-1]})</th>
+          <th>Conclusão</th><th>Início</th><th>Término</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
 }
 
-// ── Funis ─────────────────────────────────────────────────────────
 function renderFunnels(){
   const fcat=document.getElementById('fcat')?.value||'todas';
   let html='';
@@ -580,12 +480,12 @@ function renderFunnels(){
     const limpar=filtroFase!=='Todas'&&filtroFaseCat===cat?`<button class="btn" onclick="setFiltroFase('Todas')" style="font-size:11px;padding:3px 10px;">Limpar ×</button>`:'';
     html+=`<div class="funnel-wrap"><div class="ftitle"><span>${esc(label)}</span>${limpar}</div><div class="funnels">`;
     fases.forEach(f=>{
-      const c=corFase(f),cnt=projetos.filter(p=>p.fase===f).length,vgv=projetos.filter(p=>p.fase===f).reduce((a,p)=>a+Number(p.vgv),0);
+      const c=corFase(f),cnt=projetos.filter(p=>p.fase===f).length,vgv=projetos.filter(p=>p.fase===f&&FASES_FECHADO.includes(p.fase)).reduce((a,p)=>a+Number(p.vgv),0);
       const ativo=filtroFase===f,opac=filtroFase!=='Todas'&&!ativo?'.35':'1';
       html+=`<div class="fcell" onclick="setFiltroFase('${f}','${cat}')"><div class="fcell-inner" style="background:${ativo?c.text:c.bg};border-color:${c.border};opacity:${opac}">
         <div class="fn" style="color:${ativo?'#fff':c.text}">${cnt}</div>
         <div class="fl" style="color:${ativo?'#fff':c.text}">${esc(f)}</div>
-        <div class="fv" style="color:${ativo?'rgba(255,255,255,.8)':c.text}">${fmt(vgv)}</div>
+        <div class="fv" style="color:${ativo?'rgba(255,255,255,.8)':c.text}">${vgv>0?fmt(vgv):''}</div>
       </div></div>`;
     });
     html+='</div></div>';
@@ -600,7 +500,6 @@ function renderResponsaveisSelect(){
     (config.responsaveis||[]).map(r=>`<option${cur===r.nome?' selected':''}>${esc(r.nome)}</option>`).join('');
 }
 
-// ── Kanban ────────────────────────────────────────────────────────
 function renderKanban(){
   const fcat=document.getElementById('fcat')?.value||'todas';
   const filtered=getFiltered();
@@ -618,14 +517,13 @@ function renderKanban(){
       const prazoC=isVenc(p.prazoFechamento)?'venc':isUrg(p.prazoFechamento)?'urg':'';
       const prazoTxt=isVenc(p.prazoFechamento)?'Vencido':isUrg(p.prazoFechamento)?'Urgente':fmtD(p.prazoFechamento);
       const docsP=(p.docs||[]).filter(d=>!d.ok).length;
-      const proxRec=(p.cronograma||[]).filter(c=>!c.recebido&&c.data).sort((a,b)=>a.data.localeCompare(b.data))[0];
+      const pct=Number(p.pctConclusao||0);
       html+=`<div class="kcard" onclick="abrirPainel(${p.id})">
         <div class="kc-name">${esc(p.empreendimento||p.cliente)}<span style="color:${PC[p.prioridade]||'#888'};font-size:10px;font-weight:600;">${esc(p.prioridade)}</span></div>
-        <div class="kc-emp">${esc(p.cliente)}</div>
-        <div class="kc-vgv">${fmt(Number(p.vgv))}</div>
+        <div class="kc-cliente">${esc(p.cliente)}</div>
+        <div class="kc-vgv">${FASES_FECHADO.includes(p.fase)?fmt(Number(p.vgv)):'<span style="color:#aaa;font-size:11px;">Em negociação</span>'}</div>
+        ${p.dataInicio?`<div style="margin-top:4px;"><div style="background:#e5e5e0;border-radius:3px;height:5px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:#1D9E75;border-radius:3px;"></div></div><span style="font-size:10px;color:#1D9E75;">${pct}% concluído</span></div>`:''}
         <div class="kc-foot"><span style="font-size:10px;color:#888">${esc(p.responsavel)}</span><span class="kc-prazo ${prazoC}" style="font-size:10px;">${prazoTxt}</span></div>
-        ${p.tipoContrato?`<div style="font-size:10px;color:#7F77DD;margin-top:2px;">${esc(p.tipoContrato)}</div>`:''}
-        ${proxRec?`<div style="font-size:10px;color:#BA7517;margin-top:2px;">Próx: ${fmtD(proxRec.data)} – ${fmtK(proxRec.valor)}</div>`:''}
         ${docsP>0?`<div style="font-size:10px;color:#E24B4A;margin-top:3px;">${docsP} doc(s) pendente(s)</div>`:''}
       </div>`;
     });
@@ -634,43 +532,46 @@ function renderKanban(){
   document.getElementById('kanban-area').innerHTML=html;
 }
 
-// ── Lista ─────────────────────────────────────────────────────────
 function renderLista(){
   const filtered=getFiltered();
   let rows='';
   if(!filtered.length) rows=`<tr><td colspan="10" class="empty">Nenhum projeto.</td></tr>`;
   filtered.forEach(p=>{
     const prazoC=isVenc(p.prazoFechamento)?'style="color:#E24B4A"':isUrg(p.prazoFechamento)?'style="color:#BA7517"':'';
-    const proxRec=(p.cronograma||[]).filter(c=>!c.recebido&&c.data).sort((a,b)=>a.data.localeCompare(b.data))[0];
-    rows+=`<tr onclick="abrirPainel(${p.id})">
+    const pct=Number(p.pctConclusao||0);
+    rows+=`<tr onclick="abrirPainel(${p.id})" onmouseover="this.style.background='#f8f8f6'" onmouseout="this.style.background=''">
       <td style="font-weight:500">${esc(p.empreendimento||p.cliente)}</td>
       <td style="color:#666">${esc(p.cliente)}</td>
       <td>${catTag(p.categoria)}</td>
       <td>${tagHTML(p.fase)}</td>
-      <td style="font-weight:500;color:#185FA5;white-space:nowrap">${fmt(Number(p.vgv))}</td>
+      <td style="font-weight:500;color:${FASES_FECHADO.includes(p.fase)?'#185FA5':'#aaa'};white-space:nowrap">${FASES_FECHADO.includes(p.fase)?fmt(Number(p.vgv)):'—'}</td>
       <td style="color:#666;font-size:12px;">${esc(p.tipoContrato||'—')}</td>
       <td style="color:#666">${esc(p.responsavel)}</td>
       <td ${prazoC} style="white-space:nowrap">${fmtD(p.prazoFechamento)}</td>
-      <td style="color:${proxRec?'#BA7517':'#aaa'};white-space:nowrap;font-size:12px;">${proxRec?fmtD(proxRec.data)+' '+fmtK(proxRec.valor):'—'}</td>
+      <td style="white-space:nowrap;min-width:100px;">
+        <div style="background:#e5e5e0;border-radius:3px;height:6px;margin-bottom:2px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:#1D9E75;border-radius:3px;"></div>
+        </div>
+        <span style="font-size:10px;color:#1D9E75;">${pct}%</span>
+      </td>
       <td style="color:${(p.docs||[]).some(d=>!d.ok)?'#E24B4A':'#639922'};font-size:12px;">${(p.docs||[]).filter(d=>!d.ok).length} pend.</td>
     </tr>`;
   });
   document.getElementById('lista-area').innerHTML=`<table>
-    <thead><tr>      <th>Projeto</th><th>Cliente</th><th>Cat.</th><th>Fase</th><th>VGV</th><th>Tipo contrato</th><th>Responsável</th><th>Prazo</th><th>Próx. recebimento</th><th>Docs</th></tr></thead>
+    <thead><tr><th>Projeto</th><th>Cliente</th><th>Cat.</th><th>Fase</th><th>VGV</th><th>Tipo contrato</th><th>Responsável</th><th>Prazo</th><th>Conclusão</th><th>Docs</th></tr></thead>
     <tbody>${rows}</tbody></table>`;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// PAINEL LATERAL
-// ═══════════════════════════════════════════════════════════════════
-function abrirPainel(id){ selectedId=id; document.getElementById('painel').classList.add('open'); renderPainel(); }
-function fecharPainel(){ selectedId=null; document.getElementById('painel').classList.remove('open'); }
+// ── Painel ────────────────────────────────────────────────────────
+function abrirPainel(id){selectedId=id;document.getElementById('painel').classList.add('open');renderPainel();}
+function fecharPainel(){selectedId=null;document.getElementById('painel').classList.remove('open');}
+function getProjeto(id){return projetos.find(x=>x.id===id);}
 
 function renderPainel(){
-  const p=projetos.find(x=>x.id===selectedId); if(!p) return;
-  document.getElementById('p-nome').textContent=p.cliente;
-  document.getElementById('p-emp').textContent=p.empreendimento||'';
-  renderTabInfo(p); renderTabContrato(p); renderTabCrono(p); renderTabDocs(p); renderTabObs(p);
+  const p=getProjeto(selectedId); if(!p) return;
+  document.getElementById('p-nome').textContent=p.empreendimento||p.cliente;
+  document.getElementById('p-cliente').textContent=p.cliente;
+  renderTabInfo(p); renderTabContrato(p); renderTabTimeline(p); renderTabDocs(p); renderTabObs(p);
 }
 
 function renderTabInfo(p){
@@ -678,10 +579,10 @@ function renderTabInfo(p){
   document.getElementById('tab-info').innerHTML=`
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">${tagHTML(p.fase)}${catTag(p.categoria)}<span style="font-size:12px;font-weight:600;color:${PC[p.prioridade]||'#888'}">${esc(p.prioridade)}</span></div>
     <div class="pinfo-grid">
-      <div class="pinfo-cell"><div class="pl">VGV</div><div class="pv" style="color:#185FA5">${fmtMil(p.vgv)}</div></div>
+      <div class="pinfo-cell"><div class="pl">VGV</div><div class="pv" style="color:${FASES_FECHADO.includes(p.fase)?'#185FA5':'#aaa'}">${FASES_FECHADO.includes(p.fase)?fmtMil(p.vgv):'Em negociação'}</div></div>
       <div class="pinfo-cell"><div class="pl">Responsável</div><div class="pv">${esc(p.responsavel||'—')}</div></div>
-      <div class="pinfo-cell"><div class="pl">Contato</div><div class="pv">${fmtD(p.dataContato)}</div></div>
-      <div class="pinfo-cell"><div class="pl">Prazo</div><div class="pv ${isVenc(p.prazoFechamento)?'venc':isUrg(p.prazoFechamento)?'urg':''}">${fmtD(p.prazoFechamento)}</div></div>
+      <div class="pinfo-cell"><div class="pl">Contato inicial</div><div class="pv">${fmtD(p.dataContato)}</div></div>
+      <div class="pinfo-cell"><div class="pl">Prazo fechamento</div><div class="pv ${isVenc(p.prazoFechamento)?'venc':isUrg(p.prazoFechamento)?'urg':''}">${fmtD(p.prazoFechamento)}</div></div>
       <div class="pinfo-cell"><div class="pl">Tipo</div><div class="pv">${esc(p.tipo||'—')}</div></div>
       <div class="pinfo-cell"><div class="pl">Origem</div><div class="pv">${esc(p.origem||'—')}</div></div>
     </div>
@@ -695,55 +596,87 @@ function renderTabContrato(p){
     <div class="pinfo-grid">
       <div class="pinfo-cell" style="grid-column:1/-1"><div class="pl">Tipo de contrato</div><div class="pv" style="color:#534AB7">${esc(p.tipoContrato||'Não definido')}</div></div>
       <div class="pinfo-cell"><div class="pl">Forma de pagamento</div><div class="pv">${esc(p.formaPgto||'—')}</div></div>
-      <div class="pinfo-cell"><div class="pl">Valor contratado</div><div class="pv" style="color:#185FA5">${p.vgv?fmtMil(p.vgv):'—'}</div></div>
+      <div class="pinfo-cell"><div class="pl">Valor contratado</div><div class="pv" style="color:#185FA5">${FASES_FECHADO.includes(p.fase)?fmtMil(p.vgv):'—'}</div></div>
     </div>
     ${p.obsContrato?`<div style="margin-top:10px;"><div class="slbl">OBSERVAÇÕES DO CONTRATO</div><div style="background:#f4f4f2;border-radius:6px;padding:8px 10px;font-size:13px;margin-top:4px;">${esc(p.obsContrato)}</div></div>`:''}
     <button class="btn btn-blue" style="width:100%;margin-top:14px;" onclick="abrirEditar()">Editar informações do contrato</button>`;
 }
 
-function renderTabCrono(p){
-  const parcelas=(p.cronograma||[]).slice().sort((a,b)=>(a.data||'').localeCompare(b.data||''));
-  const tTotal=parcelas.reduce((a,c)=>a+Number(c.valor||0),0);
-  const tRec=parcelas.filter(c=>c.recebido).reduce((a,c)=>a+Number(c.valor||0),0);
-  let rows='';
-  if(!parcelas.length) rows=`<p style="font-size:13px;color:#aaa;margin-bottom:12px;">Nenhum recebimento lançado.</p>`;
-  parcelas.forEach((c,i)=>{
-    const venc=isVenc(c.data)&&!c.recebido, urg=isUrg(c.data)&&!c.recebido;
-    rows+=`<div class="crono-row" style="${c.recebido?'opacity:.5':''}">
-      <span style="${venc?'color:#E24B4A;font-weight:600':urg?'color:#BA7517;font-weight:600':''}">${fmtD(c.data)}${c.desc?`<br><span style="font-size:10px;color:#aaa">${esc(c.desc)}</span>`:''}</span>
-      <span style="font-weight:500;color:#185FA5">${fmtMil(c.valor)}</span>
-      <button onclick="toggleRecebido(${p.id},${i})" title="${c.recebido?'Marcar pendente':'Marcar recebido'}"
-        style="width:22px;height:22px;border-radius:4px;border:1.5px solid ${c.recebido?'#639922':'#ccc'};background:${c.recebido?'#dcfce7':'transparent'};cursor:pointer;font-size:12px;font-weight:700;color:${c.recebido?'#639922':'#aaa'};">${c.recebido?'✓':'○'}</button>
-      <button onclick="removerParcela(${p.id},${i})" style="border:none;background:none;color:#E24B4A;cursor:pointer;font-size:16px;padding:0 2px;">×</button>
-    </div>`;
-  });
-  if(parcelas.length) rows+=`<div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
-    <span style="font-size:12px;color:#185FA5;font-weight:600;">Total: ${fmtMil(tTotal)}</span>
-    <span style="font-size:12px;color:#639922;">Recebido: ${fmtMil(tRec)}</span>
-    <span style="font-size:12px;color:#E24B4A;">Pendente: ${fmtMil(tTotal-tRec)}</span>
-  </div>`;
-  document.getElementById('tab-crono').innerHTML=`
-    <div class="slbl" style="margin-bottom:6px;">PARCELAS DE RECEBIMENTO</div>
-    <div style="font-size:11px;color:#aaa;margin-bottom:10px;">✓ = recebido | vermelho = vencido | laranja = vence em 14 dias</div>
-    ${rows}
-    <div style="margin-top:14px;padding-top:12px;border-top:0.5px solid #e5e5e0;">
-      <div class="slbl" style="margin-bottom:8px;">ADICIONAR PARCELA</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;">
-        <div><label style="font-size:11px;color:#888;display:block;margin-bottom:3px;">Data</label>
-          <input type="date" id="np-data" style="width:100%;padding:7px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;"></div>
-        <div><label style="font-size:11px;color:#888;display:block;margin-bottom:3px;">Valor (R$)</label>
-          <input type="number" id="np-val" min="0" placeholder="0" style="width:100%;padding:7px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;"></div>
-        <button class="btn btn-primary" onclick="addParcela(${p.id})" style="white-space:nowrap;">+ Add</button>
+// ── Timeline do projeto ───────────────────────────────────────────
+function renderTabTimeline(p){
+  const pct=Number(p.pctConclusao||0);
+  const corBarra=pct>=100?'#639922':pct>=50?'#1D9E75':'#378ADD';
+  const ini=p.dataInicio?new Date(p.dataInicio+'T00:00:00'):null;
+  const fim=p.dataFim?new Date(p.dataFim+'T00:00:00'):null;
+  let diasTotal=ini&&fim?Math.round((fim-ini)/864e5):null;
+  let diasPassados=ini?Math.round((today-ini)/864e5):null;
+  let diasRestantes=fim?Math.round((fim-today)/864e5):null;
+
+  document.getElementById('tab-timeline').innerHTML=`
+    <div class="slbl" style="margin-bottom:10px;">EXECUÇÃO DA OBRA</div>
+
+    <div class="pinfo-grid" style="margin-bottom:14px;">
+      <div class="pinfo-cell"><div class="pl">Início da obra</div><div class="pv" style="color:#185FA5">${fmtD(p.dataInicio)}</div></div>
+      <div class="pinfo-cell"><div class="pl">Término previsto</div><div class="pv" style="color:${isVenc(p.dataFim)?'#E24B4A':'#1a1a18'}">${fmtD(p.dataFim)}</div></div>
+      ${diasTotal!==null?`<div class="pinfo-cell"><div class="pl">Duração total</div><div class="pv">${diasTotal} dias</div></div>`:''}
+      ${diasRestantes!==null?`<div class="pinfo-cell"><div class="pl">${diasRestantes<0?'Dias em atraso':'Dias restantes'}</div><div class="pv" style="color:${diasRestantes<0?'#E24B4A':'#1D9E75'}">${Math.abs(diasRestantes)} dias</div></div>`:''}
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div class="slbl">% DE CONCLUSÃO</div>
+        <span style="font-size:18px;font-weight:600;color:${corBarra}">${pct}%</span>
       </div>
-      <div style="margin-top:8px;"><label style="font-size:11px;color:#888;display:block;margin-bottom:3px;">Descrição (opcional)</label>
-        <input id="np-desc" placeholder="Ex: Medição 01, Sinal..." style="width:100%;padding:7px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;"></div>
+      <div style="background:#e5e5e0;border-radius:6px;height:14px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:${corBarra};border-radius:6px;transition:width .3s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:#aaa;margin-top:4px;">
+        <span>${fmtD(p.dataInicio)}</span><span>${fmtD(p.dataFim)}</span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <div class="slbl" style="margin-bottom:8px;">ATUALIZAR % DE CONCLUSÃO</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="range" id="pct-slider" min="0" max="100" step="5" value="${pct}"
+          oninput="document.getElementById('pct-val').textContent=this.value+'%'"
+          style="flex:1;">
+        <span id="pct-val" style="font-size:14px;font-weight:600;color:#1D9E75;min-width:40px;">${pct}%</span>
+        <button class="btn btn-primary" onclick="salvarPct(${p.id})">Salvar</button>
+      </div>
+    </div>
+
+    <hr class="sep">
+    <div style="margin-bottom:8px;">
+      <div class="slbl" style="margin-bottom:8px;">EDITAR DATAS</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div><label style="font-size:11px;color:#888;display:block;margin-bottom:3px;">Data de início</label>
+          <input type="date" id="tl-ini" value="${p.dataInicio||''}" style="width:100%;padding:7px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;"></div>
+        <div><label style="font-size:11px;color:#888;display:block;margin-bottom:3px;">Data de término</label>
+          <input type="date" id="tl-fim" value="${p.dataFim||''}" style="width:100%;padding:7px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;"></div>
+      </div>
+      <button class="btn btn-blue" style="width:100%;margin-top:8px;" onclick="salvarDatasObra(${p.id})">Salvar datas</button>
     </div>`;
+}
+
+function salvarPct(id){
+  const slider=document.getElementById('pct-slider'); if(!slider) return;
+  const p=getProjeto(id); if(!p) return;
+  p.pctConclusao=Number(slider.value);
+  salvarProjeto(p); render(); renderTabTimeline(p);
+}
+function salvarDatasObra(id){
+  const ini=document.getElementById('tl-ini')?.value;
+  const fim=document.getElementById('tl-fim')?.value;
+  const p=getProjeto(id); if(!p) return;
+  p.dataInicio=ini||''; p.dataFim=fim||'';
+  salvarProjeto(p); render(); renderTabTimeline(p);
 }
 
 function renderTabDocs(p){
   const docs=p.docs||[];
   let rows=docs.map((d,i)=>`<div class="doc-row">
-    <button class="${'doc-chk'+(d.ok?' ok':'')}" onclick="toggleDoc(${p.id},${i})" style="width:20px;height:20px;border-radius:4px;border:1.5px solid ${d.ok?'#639922':'#ccc'};background:${d.ok?'#dcfce7':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:${d.ok?'#639922':'#aaa'};">${d.ok?'✓':''}</button>
+    <button onclick="toggleDoc(${p.id},${i})" style="width:20px;height:20px;border-radius:4px;border:1.5px solid ${d.ok?'#639922':'#ccc'};background:${d.ok?'#dcfce7':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:${d.ok?'#639922':'#aaa'};">${d.ok?'✓':''}</button>
     <span style="flex:1;font-size:13px;${d.ok?'text-decoration:line-through;color:#aaa':''}">${esc(d.nome)}</span>
     <button onclick="removerDoc(${p.id},${i})" style="border:none;background:none;color:#E24B4A;cursor:pointer;font-size:16px;padding:0 4px;">×</button>
   </div>`).join('');
@@ -764,63 +697,29 @@ function renderTabObs(p){
     <button class="btn btn-blue" style="width:100%;margin-top:6px;" onclick="salvarObs(${p.id})">Salvar observação</button>`;
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// AÇÕES DOS PROJETOS
-// ═══════════════════════════════════════════════════════════════════
-function getProjeto(id){ return projetos.find(x=>x.id===id); }
+// ── Ações ─────────────────────────────────────────────────────────
+function mudarFase(id,fase){const p=getProjeto(id);if(!p)return;p.fase=fase;salvarProjeto(p);render();if(selectedId===id)renderPainel();}
+function toggleDoc(id,i){const p=getProjeto(id);if(!p)return;p.docs[i].ok=!p.docs[i].ok;salvarProjeto(p);renderTabDocs(p);renderKanban();}
+function removerDoc(id,i){const p=getProjeto(id);if(!p)return;p.docs.splice(i,1);salvarProjeto(p);renderTabDocs(p);}
+function addDoc(id){const inp=document.getElementById('new-doc-inp');if(!inp||!inp.value.trim())return;const p=getProjeto(id);if(!p)return;p.docs.push({nome:inp.value.trim(),ok:false});salvarProjeto(p);renderTabDocs(p);}
+function salvarObs(id){const inp=document.getElementById('nova-obs-inp');if(!inp||!inp.value.trim())return;const p=getProjeto(id);if(!p)return;p.historico=p.historico||[];p.historico.push({texto:inp.value.trim(),ts:nowStr()});salvarProjeto(p);renderTabObs(p);}
 
-function mudarFase(id,fase){
-  const p=getProjeto(id); if(!p) return;
-  p.fase=fase; salvarProjeto(p); render(); if(selectedId===id) renderPainel();
+function confirmarExcluir(){
+  const p=getProjeto(selectedId);if(!p)return;
+  abrirModal(`<h3>Excluir projeto?</h3><p style="font-size:13px;color:#666;margin:8px 0 16px;">Projeto: <strong>${esc(p.empreendimento||p.cliente)}</strong></p>
+    <div class="btn-row"><button class="btn" onclick="fecharModal()">Cancelar</button><button class="btn btn-danger" onclick="excluir(${p.id})">Excluir</button></div>`);
 }
-function toggleDoc(id,i){
-  const p=getProjeto(id); if(!p) return;
-  p.docs[i].ok=!p.docs[i].ok; salvarProjeto(p); renderTabDocs(p); renderKanban();
-}
-function removerDoc(id,i){
-  const p=getProjeto(id); if(!p) return;
-  p.docs.splice(i,1); salvarProjeto(p); renderTabDocs(p);
-}
-function addDoc(id){
-  const inp=document.getElementById('new-doc-inp'); if(!inp||!inp.value.trim()) return;
-  const p=getProjeto(id); if(!p) return;
-  p.docs.push({nome:inp.value.trim(),ok:false}); salvarProjeto(p); renderTabDocs(p);
-}
-function salvarObs(id){
-  const inp=document.getElementById('nova-obs-inp'); if(!inp||!inp.value.trim()) return;
-  const p=getProjeto(id); if(!p) return;
-  p.historico=p.historico||[];
-  p.historico.push({texto:inp.value.trim(),ts:nowStr()}); salvarProjeto(p); renderTabObs(p);
-}
-function addParcela(id){
-  const data=document.getElementById('np-data')?.value;
-  const valor=parseFloat(document.getElementById('np-val')?.value)||0;
-  const desc=document.getElementById('np-desc')?.value.trim()||'';
-  if(!data||!valor){alert('Informe data e valor.');return;}
-  const p=getProjeto(id); if(!p) return;
-  p.cronograma=p.cronograma||[];
-  p.cronograma.push({data,valor,desc,recebido:false}); salvarProjeto(p); render(); renderTabCrono(p);
-}
-function toggleRecebido(id,i){
-  const p=getProjeto(id); if(!p) return;
-  p.cronograma[i].recebido=!p.cronograma[i].recebido; salvarProjeto(p); render(); renderTabCrono(p);
-}
-function removerParcela(id,i){
-  const p=getProjeto(id); if(!p) return;
-  p.cronograma.splice(i,1); salvarProjeto(p); render(); renderTabCrono(p);
-}
+function excluir(id){removerProjetoDB(id);projetos=projetos.filter(p=>p.id!==id);fecharModal();fecharPainel();render();}
 
-// ═══════════════════════════════════════════════════════════════════
-// FORMULÁRIO NOVO / EDITAR
-// ═══════════════════════════════════════════════════════════════════
+// ── Formulário ────────────────────────────────────────────────────
 function formHTML(p){
-  const isEdit=!!p, cat=p?.categoria||'comercial';
+  const isEdit=!!p,cat=p?.categoria||'comercial';
   const fases=(cat==='comercial'?config.fasesComerciais:config.fasesObra);
   return`<h3>${isEdit?'Editar projeto':'Novo projeto'}</h3>
   <div style="font-size:11px;color:#185FA5;font-weight:600;letter-spacing:.3px;margin-bottom:8px;">DADOS GERAIS</div>
   <div class="fgrid">
-    <div class="fg full"><label>CLIENTE *</label><input id="f-cliente" value="${esc(p?.cliente||'')}"></div>
-    <div class="fg full"><label>EMPREENDIMENTO</label><input id="f-emp" value="${esc(p?.empreendimento||'')}"></div>
+    <div class="fg full"><label>NOME DO PROJETO / EMPREENDIMENTO *</label><input id="f-emp" value="${esc(p?.empreendimento||'')}"></div>
+    <div class="fg full"><label>CLIENTE / CONTRATANTE</label><input id="f-cliente" value="${esc(p?.cliente||'')}"></div>
     <div class="fg"><label>CATEGORIA</label><select id="f-cat" onchange="atualizarFasesForm()">
       <option value="comercial"${cat==='comercial'?' selected':''}>Comercial / Venda</option>
       <option value="obra"${cat==='obra'?' selected':''}>Obra / Execução</option>
@@ -843,6 +742,18 @@ function formHTML(p){
     <div class="fg"><label>VGV / VALOR (R$)</label><input id="f-vgv" type="number" min="0" value="${p?.vgv||''}"></div>
     <div class="fg"><label>CONTATO INICIAL</label><input id="f-contato" type="date" value="${p?.dataContato||''}"></div>
     <div class="fg full"><label>PRAZO DE FECHAMENTO / ENTREGA</label><input id="f-prazo" type="date" value="${p?.prazoFechamento||''}"></div>
+  </div>
+  <hr class="sep">
+  <div style="font-size:11px;color:#1D9E75;font-weight:600;letter-spacing:.3px;margin-bottom:8px;">EXECUÇÃO DA OBRA</div>
+  <div class="fgrid">
+    <div class="fg"><label>DATA DE INÍCIO DA OBRA</label><input id="f-ini" type="date" value="${p?.dataInicio||''}"></div>
+    <div class="fg"><label>DATA DE TÉRMINO PREVISTO</label><input id="f-fim" type="date" value="${p?.dataFim||''}"></div>
+    <div class="fg full"><label>% DE CONCLUSÃO (0–100)</label>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="range" id="f-pct" min="0" max="100" step="5" value="${p?.pctConclusao||0}" oninput="document.getElementById('f-pct-val').textContent=this.value+'%'" style="flex:1;">
+        <span id="f-pct-val" style="font-size:14px;font-weight:600;color:#1D9E75;min-width:40px;">${p?.pctConclusao||0}%</span>
+      </div>
+    </div>
   </div>
   <hr class="sep">
   <div style="font-size:11px;color:#534AB7;font-weight:600;letter-spacing:.3px;margin-bottom:8px;">CONTRATO</div>
@@ -872,11 +783,10 @@ function atualizarFasesForm(){
   const cat=document.getElementById('f-cat').value;
   document.getElementById('f-fase').innerHTML=(cat==='comercial'?config.fasesComerciais:config.fasesObra).map(f=>`<option>${esc(f)}</option>`).join('');
 }
-
 function getFormData(){
   return{
-    cliente:document.getElementById('f-cliente').value.trim(),
     empreendimento:document.getElementById('f-emp').value.trim(),
+    cliente:document.getElementById('f-cliente').value.trim(),
     categoria:document.getElementById('f-cat').value,
     fase:document.getElementById('f-fase').value,
     tipo:document.getElementById('f-tipo').value,
@@ -886,6 +796,9 @@ function getFormData(){
     vgv:parseFloat(document.getElementById('f-vgv').value)||0,
     dataContato:document.getElementById('f-contato').value,
     prazoFechamento:document.getElementById('f-prazo').value,
+    dataInicio:document.getElementById('f-ini').value,
+    dataFim:document.getElementById('f-fim').value,
+    pctConclusao:Number(document.getElementById('f-pct').value)||0,
     tipoContrato:document.getElementById('f-tpct').value,
     formaPgto:document.getElementById('f-pgto').value,
     obsContrato:document.getElementById('f-obsct').value.trim(),
@@ -893,111 +806,78 @@ function getFormData(){
     gaps:document.getElementById('f-gaps').value.trim(),
   };
 }
-
-function abrirNovo(){ abrirModal(formHTML(null)); }
-function abrirEditar(){ const p=getProjeto(selectedId); if(!p) return; abrirModal(formHTML(p)); }
-
+function abrirNovo(){abrirModal(formHTML(null));}
+function abrirEditar(){const p=getProjeto(selectedId);if(!p)return;abrirModal(formHTML(p));}
 function salvarNovo(){
-  const d=getFormData(); if(!d.cliente){alert('Informe o nome do cliente.');return;}
-  const novo={...d,id:Date.now(),docs:[],historico:[],cronograma:[]};
-  projetos.push(novo); salvarProjeto(novo); fecharModal(); render();
+  const d=getFormData();if(!d.empreendimento&&!d.cliente){alert('Informe o nome do projeto ou cliente.');return;}
+  const novo={...d,id:Date.now(),docs:[],historico:[]};
+  projetos.push(novo);salvarProjeto(novo);fecharModal();render();
 }
 function salvarEditar(id){
-  const d=getFormData(); if(!d.cliente){alert('Informe o nome do cliente.');return;}
-  const i=projetos.findIndex(p=>p.id===id); if(i<0) return;
-  projetos[i]={...projetos[i],...d}; salvarProjeto(projetos[i]); fecharModal(); render();
-  if(selectedId===id) renderPainel();
+  const d=getFormData();if(!d.empreendimento&&!d.cliente){alert('Informe o nome do projeto ou cliente.');return;}
+  const i=projetos.findIndex(p=>p.id===id);if(i<0)return;
+  projetos[i]={...projetos[i],...d};salvarProjeto(projetos[i]);fecharModal();render();if(selectedId===id)renderPainel();
 }
 
-function confirmarExcluir(){
-  const p=getProjeto(selectedId); if(!p) return;
-  abrirModal(`<h3>Excluir projeto?</h3><p style="font-size:13px;color:#666;margin:8px 0 16px;">Projeto: <strong>${esc(p.cliente)}</strong></p>
-    <div class="btn-row"><button class="btn" onclick="fecharModal()">Cancelar</button><button class="btn btn-danger" onclick="excluir(${p.id})">Excluir</button></div>`);
-}
-function excluir(id){
-  removerProjetoDB(id); projetos=projetos.filter(p=>p.id!==id);
-  fecharModal(); fecharPainel(); render();
-}
+// ── Modal ─────────────────────────────────────────────────────────
+function abrirModal(html){document.getElementById('modal-box').innerHTML=html;document.getElementById('modal-bg').classList.remove('hidden');}
+function fecharModal(){document.getElementById('modal-bg').classList.add('hidden');}
+document.getElementById('modal-bg').addEventListener('click',e=>{if(e.target===document.getElementById('modal-bg'))fecharModal();});
 
-// ═══════════════════════════════════════════════════════════════════
-// MODAL
-// ═══════════════════════════════════════════════════════════════════
-function abrirModal(html){ document.getElementById('modal-box').innerHTML=html; document.getElementById('modal-bg').classList.remove('hidden'); }
-function fecharModal(){ document.getElementById('modal-bg').classList.add('hidden'); }
-document.getElementById('modal-bg').addEventListener('click',e=>{ if(e.target===document.getElementById('modal-bg')) fecharModal(); });
-
-// ═══════════════════════════════════════════════════════════════════
-// CONFIGURAÇÕES
-// ═══════════════════════════════════════════════════════════════════
-function abrirConfig(){ abrirModal(buildConfigHTML()); }
-
+// ── Configurações ─────────────────────────────────────────────────
+function abrirConfig(){abrirModal(buildConfigHTML());}
 function buildConfigHTML(){
   const ls=(k,label,move)=>{
     const items=config[k]||[];
-    const pills=items.map((item,i)=>`
-      <span style="display:inline-flex;align-items:center;gap:3px;background:#f4f4f2;border:0.5px solid #ddd;border-radius:6px;padding:4px 8px;font-size:12px;">
-        ${move?`<button onclick="cfgMove('${k}',${i},-1)" style="border:none;background:none;cursor:pointer;color:#aaa;font-size:11px;">↑</button><button onclick="cfgMove('${k}',${i},1)" style="border:none;background:none;cursor:pointer;color:#aaa;font-size:11px;">↓</button>`:''}
-        ${esc(item)}
-        <button onclick="cfgRemove('${k}',${i})" style="border:none;background:none;cursor:pointer;color:#E24B4A;font-size:14px;line-height:1;">×</button>
-      </span>`).join('');
-    return`<div style="margin-bottom:14px;">
-      <div style="font-size:11px;color:#888;font-weight:600;letter-spacing:.3px;margin-bottom:6px;">${esc(label)}</div>
+    const pills=items.map((item,i)=>`<span style="display:inline-flex;align-items:center;gap:3px;background:#f4f4f2;border:0.5px solid #ddd;border-radius:6px;padding:4px 8px;font-size:12px;">
+      ${move?`<button onclick="cfgMove('${k}',${i},-1)" style="border:none;background:none;cursor:pointer;color:#aaa;font-size:11px;">↑</button><button onclick="cfgMove('${k}',${i},1)" style="border:none;background:none;cursor:pointer;color:#aaa;font-size:11px;">↓</button>`:''}
+      ${esc(item)}<button onclick="cfgRemove('${k}',${i})" style="border:none;background:none;cursor:pointer;color:#E24B4A;font-size:14px;line-height:1;">×</button>
+    </span>`).join('');
+    return`<div style="margin-bottom:14px;"><div style="font-size:11px;color:#888;font-weight:600;letter-spacing:.3px;margin-bottom:6px;">${esc(label)}</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;">${pills||'<span style="font-size:12px;color:#aaa;">Nenhum</span>'}</div>
       <div style="display:flex;gap:6px;">
         <input id="cfg-${k}" placeholder="Nova entrada..." style="flex:1;padding:6px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;font-size:13px;" onkeydown="if(event.key==='Enter')cfgAdd('${k}')">
         <button class="btn" onclick="cfgAdd('${k}')">+ Add</button>
       </div></div>`;
   };
-  const respRows=(config.responsaveis||[]).map((r,i)=>`
-    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:6px;align-items:center;">
-      <input value="${esc(r.nome)}" onchange="cfgRespNome(${i},this.value)" style="padding:6px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;font-size:13px;">
-      <select onchange="cfgRespCargo(${i},this.value)" style="padding:6px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;font-size:13px;">
-        ${(config.cargos||[]).map(c=>`<option${c===r.cargo?' selected':''}>${esc(c)}</option>`).join('')}
-      </select>
-      <button class="btn btn-danger" onclick="cfgRespDel(${i})" style="padding:6px 10px;">×</button>
-    </div>`).join('');
+  const respRows=(config.responsaveis||[]).map((r,i)=>`<div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:6px;align-items:center;">
+    <input value="${esc(r.nome)}" onchange="cfgRespNome(${i},this.value)" style="padding:6px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;font-size:13px;">
+    <select onchange="cfgRespCargo(${i},this.value)" style="padding:6px 10px;border-radius:6px;border:0.5px solid #ccc;background:#fff;color:#1a1a18;font-size:13px;">
+      ${(config.cargos||[]).map(c=>`<option${c===r.cargo?' selected':''}>${esc(c)}</option>`).join('')}
+    </select>
+    <button class="btn btn-danger" onclick="cfgRespDel(${i})" style="padding:6px 10px;">×</button>
+  </div>`).join('');
   return`<h3>Configurações do sistema</h3>
     ${ls('fasesComerciais','FASES COMERCIAIS',true)}
     ${ls('fasesObra','FASES DE OBRA',true)}
     ${ls('tipos','TIPOS DE EMPREENDIMENTO',false)}
     ${ls('origens','ORIGENS DE LEAD',false)}
     ${ls('cargos','CARGOS / FUNÇÕES',false)}
-    <div style="margin-bottom:14px;">
-      <div style="font-size:11px;color:#888;font-weight:600;letter-spacing:.3px;margin-bottom:8px;">RESPONSÁVEIS / EQUIPE</div>
-      ${respRows}
-      <button class="btn" onclick="cfgRespAdd()">+ Adicionar</button>
-    </div>
+    <div style="margin-bottom:14px;"><div style="font-size:11px;color:#888;font-weight:600;letter-spacing:.3px;margin-bottom:8px;">RESPONSÁVEIS / EQUIPE</div>
+      ${respRows}<button class="btn" onclick="cfgRespAdd()">+ Adicionar</button></div>
     <hr class="sep">
     <button class="btn btn-danger" style="width:100%;margin-bottom:10px;" onclick="limparTodos()">Apagar todos os projetos</button>
     <div class="btn-row"><button class="btn" style="flex:1" onclick="fecharModal()">Fechar</button></div>`;
 }
+function cfgAdd(k){const inp=document.getElementById('cfg-'+k);if(!inp||!inp.value.trim())return;config[k].push(inp.value.trim());inp.value='';salvarConfig(config);abrirModal(buildConfigHTML());}
+function cfgRemove(k,i){config[k].splice(i,1);salvarConfig(config);abrirModal(buildConfigHTML());}
+function cfgMove(k,i,d){const a=config[k],j=i+d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];salvarConfig(config);abrirModal(buildConfigHTML());}
+function cfgRespNome(i,v){config.responsaveis[i].nome=v;salvarConfig(config);}
+function cfgRespCargo(i,v){config.responsaveis[i].cargo=v;salvarConfig(config);}
+function cfgRespDel(i){config.responsaveis.splice(i,1);salvarConfig(config);abrirModal(buildConfigHTML());}
+function cfgRespAdd(){config.responsaveis.push({nome:'',cargo:(config.cargos||[])[0]||''});salvarConfig(config);abrirModal(buildConfigHTML());}
+function limparTodos(){if(!window.confirm('Apagar TODOS os projetos?'))return;projetos.forEach(p=>removerProjetoDB(p.id));projetos=[];fecharModal();render();}
 
-function cfgAdd(k){ const inp=document.getElementById('cfg-'+k); if(!inp||!inp.value.trim()) return; config[k].push(inp.value.trim()); inp.value=''; salvarConfig(config); abrirModal(buildConfigHTML()); }
-function cfgRemove(k,i){ config[k].splice(i,1); salvarConfig(config); abrirModal(buildConfigHTML()); }
-function cfgMove(k,i,d){ const a=config[k],j=i+d; if(j<0||j>=a.length) return; [a[i],a[j]]=[a[j],a[i]]; salvarConfig(config); abrirModal(buildConfigHTML()); }
-function cfgRespNome(i,v){ config.responsaveis[i].nome=v; salvarConfig(config); }
-function cfgRespCargo(i,v){ config.responsaveis[i].cargo=v; salvarConfig(config); }
-function cfgRespDel(i){ config.responsaveis.splice(i,1); salvarConfig(config); abrirModal(buildConfigHTML()); }
-function cfgRespAdd(){ config.responsaveis.push({nome:'',cargo:(config.cargos||[])[0]||''}); salvarConfig(config); abrirModal(buildConfigHTML()); }
-function limparTodos(){
-  if(!window.confirm('Apagar TODOS os projetos? Não pode ser desfeito.')) return;
-  projetos.forEach(p=>removerProjetoDB(p.id)); projetos=[]; fecharModal(); render();
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// EXPORTAR CSV
-// ═══════════════════════════════════════════════════════════════════
 function exportCSV(){
-  const cols=['ID','Cliente','Empreendimento','Tipo','Categoria','Fase','VGV','Tipo Contrato','Forma Pgto','Responsável','Contato','Prazo','Prioridade','Origem','Observações','Gaps'];
-  const rows=projetos.map(p=>[p.id,p.cliente,p.empreendimento,p.tipo,p.categoria,p.fase,p.vgv,p.tipoContrato,p.formaPgto,p.responsavel,p.dataContato,p.prazoFechamento,p.prioridade,p.origem,p.obs,p.gaps]
+  const cols=['ID','Projeto','Cliente','Tipo','Categoria','Fase','VGV','Tipo Contrato','Forma Pgto','Responsável','Início Obra','Término Obra','% Conclusão','Prazo','Prioridade','Origem','Observações','Gaps'];
+  const rows=projetos.map(p=>[p.id,p.empreendimento,p.cliente,p.tipo,p.categoria,p.fase,p.vgv,p.tipoContrato,p.formaPgto,p.responsavel,p.dataInicio,p.dataFim,p.pctConclusao,p.prazoFechamento,p.prioridade,p.origem,p.obs,p.gaps]
     .map(v=>'"'+(v||'').toString().replace(/"/g,'""')+'"').join(','));
   const csv=[cols.join(','),...rows].join('\n');
-  const a=document.createElement('a'); a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
-  a.download='pipeline_'+new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')+'.csv'; a.click();
-  const msg=document.getElementById('exp-msg'); msg.style.display='inline'; setTimeout(()=>msg.style.display='none',2500);
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='pipeline_abaete_'+new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')+'.csv';a.click();
+  const msg=document.getElementById('exp-msg');msg.style.display='inline';setTimeout(()=>msg.style.display='none',2500);
 }
 
-// ── Init ──────────────────────────────────────────────────────────
 setView('kanban');
 </script>
 </body>
