@@ -270,7 +270,7 @@ function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify({projetos,confi
 
 const TIPOS_CONTRATO=['Incorporação','Loteamento','Empreitada global','Por administração e cessão de mão de obra','Administração e empreitada de mão de obra','Outro'];
 const FORMAS_PGTO=['À vista','Parcelado (boleto)','Financiamento bancário','Permuta','Misto','A definir'];
-const FASES_FECHADO=todasFases();
+const FASES_FECHADO=['Contrato Assinado','Projeto / Licenciamento','Orçamento','Licitação','Em Obra','Vistoria / Entrega','Concluído'];
 
 const CFG_DEFAULT={
   fasesComerciais:['Captação','Negociação','Ajustes','Fechamento','Contrato Assinado'],
